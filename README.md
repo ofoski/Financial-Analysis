@@ -1,6 +1,6 @@
 # Financial Data Pipeline
 
-![Daily Collection](https://github.com/YOUR-USERNAME/Financial-Analysis/actions/workflows/daily-collection.yml/badge.svg)
+![Daily Collection](https://github.com/ofoski/Financial-Analysis/actions/workflows/daily-collection.yml/badge.svg)
 
 Automated collection of financial data for Russell 2000 companies.
 
