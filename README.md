@@ -1,69 +1,55 @@
-# Financial Data Pipeline
+# Financial Analysis Pipeline
 
-![Daily Collection](https://github.com/ofoski/Financial-Analysis/actions/workflows/daily-collection.yml/badge.svg)
-
-Automated collection of financial data for Russell 2000 companies.
+Fundamental financial data collection for US equities using SEC EDGAR XBRL.
 
 ## Overview
 
-- 2,000 companies (Russell 2000 Index)
-- 5 years of annual data
-- 12 quarters of quarterly data  
-- Historical stock prices on report dates
-- 26 financial variables per period
+- **Data source:** SEC EDGAR XBRL API (free, no API key required)
+- **Coverage:** Starting with S&P 100, expanding to S&P 500 → Russell 1000 → Russell 2000
+- **History:** 5 fiscal years (annual) + 9 quarters (Q1, Q2, Q3 per year)
+- **Fallback:** Gemini AI fills missing values when XBRL tags are unavailable
+- **Storage:** SQLite database
 
-## Collection Progress
+## Financial Variables
 
-![Companies Collected](https://img.shields.io/badge/companies-0%2F2000-blue)
-![Success Rate](https://img.shields.io/badge/success%20rate-0%25-green)
-![Last Updated](https://img.shields.io/badge/last%20updated-never-lightgrey)
+### Income Statement
+Revenue, Cost of Revenue, Gross Profit, R&D, SG&A, Operating Income,
+Interest Expense, Pre-tax Income, Income Tax, Net Income, EPS Basic, EPS Diluted
 
-**Status:** Collection not started  
-**Successfully collected:** 0/2,000 companies  
-**Failed:** 0 companies  
-**Database size:** 0 MB
+### Balance Sheet
+Cash, Accounts Receivable, Inventory, Goodwill, Current Assets, Total Assets,
+Current Liabilities, Total Debt, Total Liabilities, Equity
 
-*Last collection run: Never*
-
-## Financial Data Collected
-
-Data is collected from three core financial statements:
-
-### **Income Statement**
-Revenue, Cost of Revenue, Gross Profit, R&D, SG&A, Operating Income, Interest Expense, Income Tax, Net Income, EPS Basic ($)
-
-### **Balance Sheet**
-Cash, Accounts Receivable, Inventory, Current Assets, Total Assets, Current Liabilities, Long-Term Debt, Total Liabilities, Equity
-
-### **Cash Flow Statement**
-Operating CF, CapEx, Dividends Paid, Depreciation, Stock-Based Comp, Stock Buybacks
-
-### **Market Data**
-Shares Outstanding (Basic), Stock prices on report dates
-
-## Quick Links
-
-- [View Collection Status](https://github.com/ofoski/Financial-Analysis/actions)
-- [Download Database](https://github.com/ofoski/Financial-Analysis/actions)
+### Cash Flow Statement
+Operating CF, CapEx, Depreciation, Stock-Based Comp, Stock Buybacks, Dividends Paid
 
 ## How It Works
 
-Daily automated collection via GitHub Actions:
-1. Runs at 2 AM UTC
-2. Collects 35 companies per day
-3. Saves to SQLite database
-4. Uploads as downloadable artifact
+**Pass 1 — TAG_MAP extraction**
+Each variable has an ordered list of XBRL tag alternatives. The pipeline
+tries each tag in order and takes the first one with a value for the target period.
 
-## Setup
+**Pass 2 — Gemini fallback**
+Variables still missing after Pass 1 are sent to Gemini in a single batched
+call per company per period. Gemini either finds the value directly from
+available tags or derives it from its exact components.
 
-```bash
-git clone https://github.com/YOUR-USERNAME/Financial-Analysis.git
-cd Financial-Analysis
-pip install -r requirements.txt
-# Add FMP_API_KEY to config/.env
-python collect_data.py
-```
+**Q4 computation**
+Q4 is not reported in 10-Q filings. It is computed as:
+`Q4 = Annual − Q1 − Q2 − Q3`
+
+## Collection Progress
+
+| Tier        | Companies | Status      |
+|-------------|-----------|-------------|
+| S&P 100     | ~100      | In progress |
+| S&P 500     | ~500      | Pending     |
+| Russell 1000| ~1,000    | Pending     |
+| Russell 2000| ~2,000    | Pending     |
 
 ## Data Source
 
-Financial Modeling Prep (FMP) API
+SEC EDGAR XBRL API — `https://data.sec.gov/api/xbrl/companyfacts/`
+
+All data is sourced directly from official SEC filings. No third-party
+data provider or subscription required.
