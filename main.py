@@ -9,12 +9,16 @@ import requests
 
 from src.collectors.tags import HEADERS, TICKERS_URL, fetch_ns
 from src.collectors.annual import extract_annual
-from src.storage.database import init_db, upsert_company, upsert_annual, COLUMN_MAP
+from src.storage.database import init_db, upsert_company, COLUMN_MAP
 
 # ── Edit this list to choose which companies to collect ───────────────────────
 # To run on the full Russell 2000:
 # COMPANIES = [entry["ticker"] for entry in json.loads(Path("config/russell2000_companies.json").read_text())]
-COMPANIES = ["AAPL",'MSFT', 'GOOGL', 'AMZN', 'META']  # <-- example with just a few tickers for testing
+COMPANIES = [
+    "AAPL", "GOOGL", "MSFT",
+    "AMZN", "META", "NVDA", "TSLA",
+    "JPM", "JNJ", "V", "PG", "HD", "WMT",
+]
 
 PROGRESS_FILE = Path("progress.json")
 DB_PATH       = Path("data/financials.db")
@@ -92,8 +96,7 @@ def process_ticker(ticker, cik_map, company_config, db_path):
     ns = fetch_ns(cik)
 
     today = date.today().isoformat()
-    for row in extract_annual(ns, ticker, cik):
-        upsert_annual(db_path, row["ticker"], row["fiscal_year_end"], row["data"], collected_date=today)
+    extract_annual(ns, ticker, cik, db_path=db_path, collected_date=today)
 
 
 def print_results(db_path, ticker):
@@ -163,11 +166,6 @@ def main():
             time.sleep(0.5)
 
     print(f"\nDone. {len(done)}/{len(COMPANIES)} tickers collected.")
-
-    for ticker in COMPANIES:
-        if ticker in done:
-            print(f"\n{'='*70}\n  RESULTS -- {ticker}\n{'='*70}")
-            print_results(db_path, ticker)
 
 
 if __name__ == "__main__":

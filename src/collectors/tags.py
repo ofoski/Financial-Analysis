@@ -1,3 +1,4 @@
+import time
 import requests
 from datetime import datetime
 
@@ -24,6 +25,7 @@ def fetch_cik(ticker):
     """
     resp = requests.get(TICKERS_URL, headers=HEADERS, timeout=15)
     resp.raise_for_status()
+    time.sleep(1.5)
     for v in resp.json().values():
         if v["ticker"].upper() == ticker.upper():
             return str(v["cik_str"]).zfill(10)
@@ -37,6 +39,7 @@ def fetch_ns(cik):
     """
     resp = requests.get(FACTS_URL.format(cik), headers=HEADERS, timeout=30)
     resp.raise_for_status()
+    time.sleep(1.5)
     return resp.json().get("facts", {}).get("us-gaap", {})
 
 
@@ -60,6 +63,7 @@ def get_filing_periods(cik, form, num):
     """
     resp = requests.get(SUBMISSIONS_URL.format(cik), headers=HEADERS, timeout=15)
     resp.raise_for_status()
+    time.sleep(1.5)
     payload = resp.json()
 
     filings  = payload.get("filings", {})
@@ -73,6 +77,7 @@ def get_filing_periods(cik, form, num):
         url = "https://data.sec.gov/submissions/" + file_entry["name"]
         r   = requests.get(url, headers=HEADERS, timeout=15)
         r.raise_for_status()
+        time.sleep(1.5)
         _collect_periods(r.json(), form, periods, num)
 
     return periods[:num]
