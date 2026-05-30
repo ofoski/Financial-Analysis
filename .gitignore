@@ -32,7 +32,9 @@ Thumbs.db
 
 # Jupyter notebooks
 .ipynb_checkpoints/
-Financial_Variables_Guide.docx
+
+# Word documents (if any)
+*.docx
 
 # Runtime state
 progress.json

@@ -39,7 +39,7 @@ COLUMN_MAP = {
 def init_db(db_path=DB_PATH):
     """
     Create the database and both tables if they don't exist.
-    - companies: one row per company (ticker, name, sector, industry)
+    - companies: one row per company (ticker, name, sector)
     - financial_data_annual: one row per company per fiscal year, one column per financial variable
     """
     db_path = Path(db_path)
@@ -50,10 +50,9 @@ def init_db(db_path=DB_PATH):
     with sqlite3.connect(db_path) as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS companies (
-                ticker   TEXT PRIMARY KEY,
-                name     TEXT,
-                sector   TEXT,
-                industry TEXT
+                ticker TEXT PRIMARY KEY,
+                name   TEXT,
+                sector TEXT
             )
         """)
 
@@ -73,20 +72,76 @@ def init_db(db_path=DB_PATH):
     return db_path
 
 
-def upsert_company(db_path, ticker, name=None, sector=None, industry=None):
+def _normalize_name(name):
+    if name is None:
+        return None
+    return " ".join(w.capitalize() for w in name.split())
+
+
+def upsert_company(db_path, ticker, name=None, sector=None):
     """
     Insert or update a company record.
-    Only updates name/sector/industry if a non-None value is provided.
+    Only updates name/sector if a non-None value is provided.
     """
     with sqlite3.connect(db_path) as conn:
         conn.execute("""
-            INSERT INTO companies (ticker, name, sector, industry)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO companies (ticker, name, sector)
+            VALUES (?, ?, ?)
             ON CONFLICT(ticker) DO UPDATE SET
-                name     = COALESCE(excluded.name,     name),
-                sector   = COALESCE(excluded.sector,   sector),
-                industry = COALESCE(excluded.industry, industry)
-        """, (ticker, name, sector, industry))
+                name   = COALESCE(excluded.name,   name),
+                sector = COALESCE(excluded.sector, sector)
+        """, (ticker, _normalize_name(name), sector))
+        conn.commit()
+
+
+def apply_accounting_identities(db_path, ticker):
+    """
+    Fill null values using accounting identities (pure arithmetic on DB values).
+    Only fills a column if it is currently null and both inputs are present.
+    Runs after XBRL extraction is complete for a ticker.
+    """
+    with sqlite3.connect(db_path) as conn:
+        rows = conn.execute(
+            "SELECT id, revenue, cost_of_revenue, gross_profit, "
+            "net_income, income_tax, pretax_income, "
+            "total_assets, equity, total_liabilities "
+            "FROM financial_data_annual WHERE ticker = ?",
+            (ticker,)
+        ).fetchall()
+
+        for row in rows:
+            id_, revenue, cogs, gp, net_inc, tax, pretax, assets, eq, liabs = row
+            updates = {}
+
+            # Gross Profit = Revenue - Cost of Revenue (and permutations)
+            if gp is None and revenue is not None and cogs is not None:
+                updates["gross_profit"] = revenue - cogs
+            if cogs is None and revenue is not None and gp is not None:
+                updates["cost_of_revenue"] = revenue - gp
+            if revenue is None and gp is not None and cogs is not None:
+                updates["revenue"] = gp + cogs
+
+            # Pre-tax Income = Net Income + Income Tax (and permutations)
+            if pretax is None and net_inc is not None and tax is not None:
+                updates["pretax_income"] = net_inc + tax
+            if net_inc is None and pretax is not None and tax is not None:
+                updates["net_income"] = pretax - tax
+            if tax is None and pretax is not None and net_inc is not None:
+                updates["income_tax"] = pretax - net_inc
+
+            # Total Liabilities = Total Assets - Equity
+            if liabs is None and assets is not None and eq is not None:
+                derived = assets - eq
+                if derived >= 0:
+                    updates["total_liabilities"] = derived
+
+            if updates:
+                set_clause = ", ".join(f"{k} = ?" for k in updates)
+                conn.execute(
+                    f"UPDATE financial_data_annual SET {set_clause} WHERE id = ?",
+                    [*updates.values(), id_]
+                )
+
         conn.commit()
 
 
