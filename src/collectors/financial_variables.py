@@ -46,8 +46,15 @@ FINANCIAL_VARIABLES = {
         "NetIncomeLossAvailableToCommonStockholdersBasic",
         "IncomeLossFromContinuingOperations",
     ],
-    "EPS Basic":   ["EarningsPerShareBasic"],
-    "EPS Diluted": ["EarningsPerShareDiluted", "EarningsPerShareBasicAndDiluted"],
+    "EPS Basic": [
+        "EarningsPerShareBasic",
+        "IncomeLossFromContinuingOperationsPerBasicShare",
+    ],
+    "EPS Diluted": [
+        "EarningsPerShareDiluted",
+        "EarningsPerShareBasicAndDiluted",
+        "IncomeLossFromContinuingOperationsPerDilutedShare",
+    ],
     "Cash": [
         "CashAndCashEquivalentsAtCarryingValue",
         "CashCashEquivalentsAndShortTermInvestments",
@@ -80,6 +87,7 @@ FINANCIAL_VARIABLES = {
     "Total Debt": [
         "DebtLongtermAndShorttermCombinedAmount",
         "LongTermDebtAndCapitalLeaseObligations",
+        "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities",
         "DebtAndCapitalLeaseObligations",
         "LongTermDebt",
         "LongTermDebtNoncurrent",
@@ -105,6 +113,7 @@ FINANCIAL_VARIABLES = {
         "CapitalExpendituresIncurringObligation",
         "PaymentsToAcquirePropertyPlantAndEquipmentAndSoftware",
         "PaymentsToAcquireOtherPropertyPlantAndEquipment",
+        "PaymentsToAcquireOtherProductiveAssets",
     ],
     "Depreciation": [
         "DepreciationDepletionAndAmortization",

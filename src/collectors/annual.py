@@ -1,13 +1,7 @@
 import sqlite3
-import sys
-from pathlib import Path
-
-# Add project root to path so imports work from any directory
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
 
 from src.collectors.financial_variables import FINANCIAL_VARIABLES
-from src.collectors.tags import fetch_cik, fetch_ns, get_filing_periods, find_value
+from src.collectors.tags import get_filing_periods, find_value
 from src.collectors.gemini_fallback import gemini_fallback
 from src.storage.database import COLUMN_MAP, upsert_annual
 
@@ -25,6 +19,17 @@ def _year_in_db(db_path, ticker, fiscal_year_end):
     return row is not None
 
 
+def _sum_tags(ns, tags, form, fp, period_end):
+    """Sum multiple XBRL tags for a period. Returns None if any single tag is missing."""
+    total = 0.0
+    for tag in tags:
+        value, _, _, _ = find_value(ns, [tag], form, fp, period_end)
+        if value is None:
+            return None
+        total += value
+    return total
+
+
 def extract_annual(ns, ticker, cik, db_path=None, collected_date=None):
     """
     Collect annual (10-K) financial data for a company.
@@ -33,11 +38,10 @@ def extract_annual(ns, ticker, cik, db_path=None, collected_date=None):
     then for each year:
       - Skips the year if a row already exists in the DB (from a previous partial run).
       - Looks up every variable in FINANCIAL_VARIABLES via standard tag matching.
-      - Calls Gemini once for any variables that were not found.
+      - Fills remaining gaps using aggregation rules (combining two component tags).
+      - Calls Gemini once for any variables still not found.
       - Saves the year's row to the DB immediately before moving to the next year,
         so a failure on a later year does not lose the data already collected.
-
-    When db_path is None (standalone / debugging mode) the DB check and save are skipped.
 
     Returns a list of dicts for the years that were actually processed this run:
     {
@@ -64,6 +68,79 @@ def extract_annual(ns, ticker, cik, db_path=None, collected_date=None):
             if value is None:
                 missing.append(line_item)
 
+        # ── Aggregation rules: fill gaps by combining two component tags ──────
+
+        # SG&A = Selling + G&A (companies that split them, e.g. Google)
+        if "SG&A" in missing:
+            v = _sum_tags(ns, ["SellingAndMarketingExpense", "GeneralAndAdministrativeExpense"], "10-K", "FY", period_end)
+            if v is not None:
+                data[COLUMN_MAP["SG&A"]] = v
+                missing.remove("SG&A")
+
+        # SG&A = G&A alone (companies with no separate selling line, e.g. biotechs, banks)
+        if "SG&A" in missing and "SellingAndMarketingExpense" not in ns:
+            v, _, _, _ = find_value(ns, ["GeneralAndAdministrativeExpense"], "10-K", "FY", period_end)
+            if v is not None:
+                data[COLUMN_MAP["SG&A"]] = v
+                missing.remove("SG&A")
+
+        # Pre-tax Income = domestic + foreign split (multinationals, e.g. McDonald's)
+        if "Pre-tax Income" in missing:
+            v = _sum_tags(ns, [
+                "IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic",
+                "IncomeLossFromContinuingOperationsBeforeIncomeTaxesForeign",
+            ], "10-K", "FY", period_end)
+            if v is not None:
+                data[COLUMN_MAP["Pre-tax Income"]] = v
+                missing.remove("Pre-tax Income")
+
+        # Total Liabilities = current + non-current (when the combined tag is absent)
+        if "Total Liabilities" in missing:
+            v = _sum_tags(ns, ["LiabilitiesCurrent", "LiabilitiesNoncurrent"], "10-K", "FY", period_end)
+            if v is not None:
+                data[COLUMN_MAP["Total Liabilities"]] = v
+                missing.remove("Total Liabilities")
+
+        # ── Accounting identity rules: derive from already-found values ─────────
+        # Use values already in data{} from XBRL extraction above.
+        # Running here (before Gemini) avoids wasting quota on simple math.
+
+        # Gross Profit = Revenue - Cost of Revenue
+        if "Gross Profit" in missing:
+            rev  = data.get(COLUMN_MAP["Revenue"])
+            cogs = data.get(COLUMN_MAP["Cost of Revenue"])
+            if rev is not None and cogs is not None:
+                data[COLUMN_MAP["Gross Profit"]] = rev - cogs
+                missing.remove("Gross Profit")
+
+        # Cost of Revenue = Revenue - Gross Profit (when Gross Profit is directly tagged)
+        if "Cost of Revenue" in missing:
+            rev = data.get(COLUMN_MAP["Revenue"])
+            gp  = data.get(COLUMN_MAP["Gross Profit"])
+            if rev is not None and gp is not None:
+                data[COLUMN_MAP["Cost of Revenue"]] = rev - gp
+                missing.remove("Cost of Revenue")
+
+        # Pre-tax Income = Net Income + Income Tax
+        if "Pre-tax Income" in missing:
+            net = data.get(COLUMN_MAP["Net Income"])
+            tax = data.get(COLUMN_MAP["Income Tax"])
+            if net is not None and tax is not None:
+                data[COLUMN_MAP["Pre-tax Income"]] = net + tax
+                missing.remove("Pre-tax Income")
+
+        # Total Liabilities = Total Assets - Equity
+        if "Total Liabilities" in missing:
+            assets = data.get(COLUMN_MAP["Total Assets"])
+            equity = data.get(COLUMN_MAP["Equity"])
+            if assets is not None and equity is not None:
+                derived = assets - equity
+                if derived >= 0:
+                    data[COLUMN_MAP["Total Liabilities"]] = derived
+                    missing.remove("Total Liabilities")
+
+        # ─────────────────────────────────────────────────────────────────────
+
         if missing:
             fallback = gemini_fallback(missing, ns, ticker, "10-K", "FY", period_end)
             for line_item in missing:
@@ -83,32 +160,3 @@ def extract_annual(ns, ticker, cik, db_path=None, collected_date=None):
     return rows
 
 
-def _print_rows(rows):
-    """Print a readable summary table for each fiscal year."""
-    for row in sorted(rows, key=lambda r: r["fiscal_year_end"], reverse=True):
-        data    = row["data"]
-        found   = sum(1 for v in data.values() if v is not None)
-        missing = len(data) - found
-
-        print(f"\n{'='*70}")
-        print(f"  {row['fiscal_year_end']}  10-K  FY  --  {found} found, {missing} NULL")
-        print(f"  {'Column':<22}  {'Value ($M)':>14}")
-        print(f"  {'-'*40}")
-
-        for col, val in data.items():
-            if val is not None:
-                formatted = f"{val:>14,.2f}"
-            else:
-                formatted = f"{'NULL':>14}"
-            print(f"  {col:<22}  {formatted}")
-
-
-if __name__ == "__main__":
-    ticker = sys.argv[1] if len(sys.argv) > 1 else "AAPL"
-    print(f"Fetching annual data for {ticker}...")
-
-    cik  = fetch_cik(ticker)
-    ns   = fetch_ns(cik)
-    rows = extract_annual(ns, ticker, cik)  # no db_path → standalone mode, no DB check/save
-
-    _print_rows(rows)

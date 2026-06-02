@@ -1,6 +1,5 @@
 import json
 import logging
-import sqlite3
 import time
 from datetime import date
 from pathlib import Path
@@ -9,15 +8,14 @@ import requests
 
 from src.collectors.tags import HEADERS, TICKERS_URL, fetch_ns
 from src.collectors.annual import extract_annual
-from src.storage.database import init_db, upsert_company, COLUMN_MAP
+from src.storage.database import init_db, upsert_company, apply_accounting_identities
 
 # ── Edit this list to choose which companies to collect ───────────────────────
-# To run on the full Russell 2000:
-# COMPANIES = [entry["ticker"] for entry in json.loads(Path("config/russell2000_companies.json").read_text())]
+# To run on the full Russell 3000:
+# COMPANIES = [entry["ticker"] for entry in json.loads(Path("config/russell_3000_equity_holdings.json").read_text())]
 COMPANIES = [
-    "AAPL", "GOOGL", "MSFT",
-    "AMZN", "META", "NVDA", "TSLA",
-    "JPM", "JNJ", "V", "PG", "HD", "WMT",
+    entry["ticker"]
+    for entry in json.loads(Path("config/russell_3000_equity_holdings.json").read_text())
 ]
 
 PROGRESS_FILE = Path("progress.json")
@@ -62,15 +60,15 @@ def save_progress(done):
 
 def load_company_config():
     """
-    Load sector and industry data from the Russell 2000 config file.
-    Returns a dict: { "AAPL": {"sector": ..., "industry": ...}, ... }
+    Load sector data from the Russell 3000 config file.
+    Returns a dict: { "AAPL": {"sector": ...}, ... }
     """
-    config_path = Path("config/russell2000_companies.json")
+    config_path = Path("config/russell_3000_equity_holdings.json")
     if not config_path.exists():
         return {}
     entries = json.loads(config_path.read_text())
     return {
-        e["ticker"].upper(): {"sector": e.get("sector"), "industry": e.get("industry")}
+        e["ticker"].upper(): {"sector": e.get("sector")}
         for e in entries
     }
 
@@ -79,7 +77,7 @@ def process_ticker(ticker, cik_map, company_config, db_path):
     """
     Run the full collection pipeline for one ticker:
     1. Look up CIK and company name from the pre-loaded map
-    2. Save company info (name, sector, industry) to the companies table
+    2. Save company info (name, sector) to the companies table
     3. Download XBRL facts from SEC
     4. Extract annual data and save each fiscal year to the DB
     """
@@ -90,48 +88,15 @@ def process_ticker(ticker, cik_map, company_config, db_path):
     cik  = entry["cik"]
     name = entry["name"]
 
-    extra = company_config.get(ticker.upper(), {})
-    upsert_company(db_path, ticker, name=name, sector=extra.get("sector"), industry=extra.get("industry"))
+    ns = fetch_ns(cik)  # fetch first — only insert company if this succeeds
 
-    ns = fetch_ns(cik)
+    extra = company_config.get(ticker.upper(), {})
+    upsert_company(db_path, ticker, name=name, sector=extra.get("sector"))
 
     today = date.today().isoformat()
     extract_annual(ns, ticker, cik, db_path=db_path, collected_date=today)
+    apply_accounting_identities(db_path, ticker)
 
-
-def print_results(db_path, ticker):
-    """
-    Read back what was saved for a ticker and print it as a table,
-    one section per fiscal year.
-    """
-    with sqlite3.connect(db_path) as conn:
-        conn.row_factory = sqlite3.Row
-        rows = conn.execute(
-            "SELECT * FROM financial_data_annual WHERE ticker = ? ORDER BY fiscal_year_end DESC",
-            (ticker,),
-        ).fetchall()
-
-    if not rows:
-        print("  No data found.")
-        return
-
-    col_names = list(COLUMN_MAP.values())
-
-    for row in rows:
-        found   = sum(1 for col in col_names if row[col] is not None)
-        missing = len(col_names) - found
-
-        print(f"\n  {row['fiscal_year_end']}  10-K  FY  --  {found} found, {missing} NULL")
-        print(f"  {'Column':<22}  {'Value ($M)':>14}")
-        print(f"  {'-'*40}")
-
-        for col in col_names:
-            val = row[col]
-            if val is not None:
-                formatted = f"{val:>14,.2f}"
-            else:
-                formatted = f"{'NULL':>14}"
-            print(f"  {col:<22}  {formatted}")
 
 
 def main():
