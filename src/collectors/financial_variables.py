@@ -125,7 +125,6 @@ FINANCIAL_VARIABLES = {
     "Stock-Based Comp": [
         "ShareBasedCompensation",
         "AllocatedShareBasedCompensationExpense",
-        "ShareBasedCompensationExpense",
     ],
     "Stock Buybacks": [
         "PaymentsForRepurchaseOfCommonStock",

@@ -10,9 +10,12 @@ from src.collectors.tags import HEADERS, TICKERS_URL, fetch_ns
 from src.collectors.annual import extract_annual
 from src.storage.database import init_db, upsert_company, apply_accounting_identities
 
-# ── Edit this list to choose which companies to collect ───────────────────────
-# To run on the full Russell 3000:
-# COMPANIES = [entry["ticker"] for entry in json.loads(Path("config/russell_3000_equity_holdings.json").read_text())]
+# ── Sector filter ──────────────────────────────────────────────────────────────
+# Set to a list of sector names to only collect those sectors.
+# Set to [] to collect all sectors (full Russell 3000 run).
+SECTOR_FILTER = ["Information Technology"]
+
+# ── Company list ───────────────────────────────────────────────────────────────
 COMPANIES = [
     entry["ticker"]
     for entry in json.loads(Path("config/russell_3000_equity_holdings.json").read_text())
@@ -20,6 +23,7 @@ COMPANIES = [
 
 PROGRESS_FILE = Path("progress.json")
 DB_PATH       = Path("data/financials.db")
+AUDIT_PATH    = Path("data/extraction_audit.jsonl")
 
 logging.basicConfig(
     filename="errors.log",
@@ -73,7 +77,7 @@ def load_company_config():
     }
 
 
-def process_ticker(ticker, cik_map, company_config, db_path):
+def process_ticker(ticker, cik_map, company_config, db_path, audit_path):
     """
     Run the full collection pipeline for one ticker:
     1. Look up CIK and company name from the pre-loaded map
@@ -90,11 +94,12 @@ def process_ticker(ticker, cik_map, company_config, db_path):
 
     ns = fetch_ns(cik)  # fetch first — only insert company if this succeeds
 
-    extra = company_config.get(ticker.upper(), {})
-    upsert_company(db_path, ticker, name=name, sector=extra.get("sector"))
+    extra  = company_config.get(ticker.upper(), {})
+    sector = extra.get("sector")
+    upsert_company(db_path, ticker, name=name, sector=sector)
 
     today = date.today().isoformat()
-    extract_annual(ns, ticker, cik, db_path=db_path, collected_date=today)
+    extract_annual(ns, ticker, cik, db_path=db_path, collected_date=today, sector=sector, audit_path=audit_path)
     apply_accounting_identities(db_path, ticker)
 
 
@@ -114,12 +119,17 @@ def main():
     company_config = load_company_config()
 
     remaining = [t for t in COMPANIES if t not in done]
-    print(f"{len(done)} already done, {len(remaining)} remaining out of {len(COMPANIES)} total\n")
+
+    if SECTOR_FILTER:
+        remaining = [t for t in remaining if company_config.get(t, {}).get("sector") in SECTOR_FILTER]
+        print(f"Sector filter active: {SECTOR_FILTER}")
+
+    print(f"{len(done)} already done, {len(remaining)} remaining\n")
 
     for i, ticker in enumerate(remaining, 1):
         print(f"[{i}/{len(remaining)}] {ticker} ...", end=" ", flush=True)
         try:
-            process_ticker(ticker, cik_map, company_config, db_path)
+            process_ticker(ticker, cik_map, company_config, db_path, AUDIT_PATH)
             done.add(ticker)
             save_progress(done)
             print("OK")
