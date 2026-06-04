@@ -3320,11 +3320,6 @@
     "sector": "Information Technology"
   },
   {
-    "ticker": "GFS",
-    "name": "GLOBALFOUNDRIES INC",
-    "sector": "Information Technology"
-  },
-  {
     "ticker": "COKE",
     "name": "COCA COLA CONSOLIDATED INC",
     "sector": "Consumer Staples"
@@ -4038,11 +4033,6 @@
     "ticker": "STAG",
     "name": "STAG INDUSTRIAL REIT INC",
     "sector": "Real Estate"
-  },
-  {
-    "ticker": "DOX",
-    "name": "AMDOCS LTD",
-    "sector": "Information Technology"
   },
   {
     "ticker": "LAD",
@@ -7870,11 +7860,6 @@
     "sector": "Industrials"
   },
   {
-    "ticker": "BTDR",
-    "name": "BITDEER TECHNOLOGIES GROUP CLASS A",
-    "sector": "Information Technology"
-  },
-  {
     "ticker": "SEM",
     "name": "SELECT MEDICAL HOLDINGS CORP",
     "sector": "Health Care"
@@ -7893,11 +7878,6 @@
     "ticker": "CBL",
     "name": "CBL ASSOCIATES PROPERTIES INC",
     "sector": "Real Estate"
-  },
-  {
-    "ticker": "GLOB",
-    "name": "GLOBANT SA",
-    "sector": "Information Technology"
   },
   {
     "ticker": "TILE",
@@ -10668,11 +10648,6 @@
     "ticker": "WSBF",
     "name": "WATERSTONE FINANCIAL INC",
     "sector": "Financials"
-  },
-  {
-    "ticker": "RZLV",
-    "name": "REZOLVE AI PLC",
-    "sector": "Information Technology"
   },
   {
     "ticker": "IBTA",

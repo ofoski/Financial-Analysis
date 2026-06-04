@@ -8,7 +8,9 @@ import requests
 
 from src.collectors.tags import HEADERS, TICKERS_URL, fetch_ns
 from src.collectors.annual import extract_annual
-from src.storage.database import init_db, upsert_company, apply_accounting_identities
+from src.collectors.accounting import apply_accounting_identities
+from src.storage.database import init_db, upsert_company
+from src.analysis.metrics import create_metrics_view
 
 # ── Sector filter ──────────────────────────────────────────────────────────────
 # Set to a list of sector names to only collect those sectors.
@@ -106,6 +108,7 @@ def process_ticker(ticker, cik_map, company_config, db_path, audit_path):
 
 def main():
     db_path = init_db(DB_PATH)
+    create_metrics_view(db_path)
     done    = load_progress()
 
     print("Loading CIK map from SEC...")

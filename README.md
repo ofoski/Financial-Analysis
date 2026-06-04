@@ -51,8 +51,6 @@ Financial-Analysis/
 ├── main.py                          # Pipeline runner
 ├── config/
 │   └── .env                         # API keys (not committed)
-├── data/
-│   └── financials.db                # SQLite database
 └── src/
     ├── collectors/
     │   ├── tags.py                  # SEC EDGAR fetching
