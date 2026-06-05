@@ -6,7 +6,7 @@ from src.collectors.tags import get_filing_periods, find_value
 from src.collectors.gemini_fallback import gemini_fallback
 from src.storage.database import COLUMN_MAP, upsert_annual
 
-N_ANNUAL = 5
+N_ANNUAL = 10
 
 # Columns where a negative XBRL value is always a sign-convention filing error.
 # These represent cash outflows or expense magnitudes that are positive by definition.
@@ -174,6 +174,42 @@ def extract_annual(ns, ticker, cik, db_path=None, collected_date=None, sector=No
                 if derived >= 0:
                     data[COLUMN_MAP["Total Liabilities"]] = derived
                     missing.remove("Total Liabilities")
+
+        # ── Sanity checks: detect impossible values and re-route to Gemini ──────
+        # When an accounting identity is violated, the XBRL tag picked up a
+        # sub-segment instead of the consolidated total. Setting the bad value
+        # to None and adding it back to missing[] lets Gemini read the correct
+        # number directly from the filing text.
+
+        rev    = data.get(COLUMN_MAP["Revenue"])
+        gp     = data.get(COLUMN_MAP["Gross Profit"])
+        net    = data.get(COLUMN_MAP["Net Income"])
+        assets = data.get(COLUMN_MAP["Total Assets"])
+        cur_assets = data.get(COLUMN_MAP["Current Assets"])
+
+        # Gross Profit cannot exceed Revenue — revenue tag captured a sub-segment
+        if rev is not None and gp is not None and gp > rev:
+            data[COLUMN_MAP["Revenue"]] = None
+            if "Revenue" not in missing:
+                missing.append("Revenue")
+
+        # Net Income cannot exceed Revenue (when both positive)
+        if rev is not None and net is not None and net > 0 and net > rev:
+            data[COLUMN_MAP["Revenue"]] = None
+            if "Revenue" not in missing:
+                missing.append("Revenue")
+
+        # Revenue cannot be negative
+        if rev is not None and rev < 0:
+            data[COLUMN_MAP["Revenue"]] = None
+            if "Revenue" not in missing:
+                missing.append("Revenue")
+
+        # Current Assets cannot exceed Total Assets
+        if assets is not None and cur_assets is not None and cur_assets > assets:
+            data[COLUMN_MAP["Current Assets"]] = None
+            if "Current Assets" not in missing:
+                missing.append("Current Assets")
 
         # ─────────────────────────────────────────────────────────────────────
 

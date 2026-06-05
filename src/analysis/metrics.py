@@ -17,7 +17,8 @@ _METRICS_VIEW_SQL = """
             (f.net_income / NULLIF(f.eps_basic, 0) * p.price) / NULLIF(f.revenue, 0),
             4
         ) AS ps_ratio,
-        ROUND(f.total_debt / NULLIF(f.equity, 0), 4) AS debt_equity
+        ROUND(f.total_debt / NULLIF(f.equity, 0), 4) AS debt_equity,
+        p.price
     FROM financial_data_annual f
     LEFT JOIN prices p ON f.ticker = p.ticker AND f.fiscal_year_end = p.date
 """
