@@ -1,67 +1,77 @@
 # Financial Analysis Pipeline
 
-Fundamental financial data collection for US equities using SEC EDGAR XBRL, with a Gemini AI fallback for missing values.
-
-## Overview
-
-- **Data source:** SEC EDGAR XBRL API (free, no API key required)
-- **Coverage:** Russell 3000 US equities (annual 10-K filings)
-- **History:** Last 5 fiscal years per company
-- **Storage:** SQLite (`data/financials.db`)
-- **Sector-aware:** Real Estate and Financials use tailored variable sets
-- **Progress:** Resumable — safe to stop and re-run at any time
-
-## Financial Variables (28 total)
-
-### Income Statement
-Revenue, Cost of Revenue, Gross Profit, R&D, SG&A, Operating Income, Interest Expense, Pre-tax Income, Income Tax, Net Income, EPS Basic, EPS Diluted
-
-### Balance Sheet
-Cash, Accounts Receivable, Inventory, Goodwill, Current Assets, Total Assets, Current Liabilities, Total Debt, Total Liabilities, Equity
-
-### Cash Flow Statement
-Operating CF, CapEx, Depreciation, Stock-Based Comp, Stock Buybacks, Dividends Paid
-
-> Real Estate and Financials sectors omit Cost of Revenue, Gross Profit, and R&D — these concepts do not apply to those sectors.
-
----
+Collects 10 years of fundamental financial data for Russell 3000 companies from SEC EDGAR, extracted by DeepSeek V4 Flash LLM.
 
 ## How It Works
 
-### Pass 1 — XBRL tag matching
-Each variable has an ordered list of XBRL tag alternatives in `src/collectors/financial_variables.py`. The pipeline tries each tag in order and takes the first match for the target period. Payment-type tags (interest expense, capex, buybacks, dividends paid) automatically have their sign corrected if filed as negative outflows.
+1. **Fetch filings** — `edgar.py` downloads `FilingSummary.xml` for each 10-K to locate the income statement, balance sheet, and cash flow HTML files.
+2. **Extract data** — `extractor.py` sends the three HTML tables as plain text to DeepSeek V4 Flash (Azure), which returns all 30 variables for every fiscal year shown in the filing.
+3. **Every-2nd-filing strategy** — each 10-K covers 2–3 years. By selecting every other filing (e.g. 2025, 2023, 2021, 2019, 2017), 10 complete years are collected with balance sheet overlap filled in.
+4. **Store** — results are saved to SQLite (`data/financials.db`). Re-runs are safe — existing rows are preserved.
+5. **Audit log** — every extracted value and its source label are written to `logs/audit.jsonl` for inspection.
 
-### Pass 2 — Accounting identities
-Missing values are derived from known ones using standard accounting relationships:
-- `Gross Profit = Revenue − Cost of Revenue`
-- `Gross Profit = Operating Income + R&D + SG&A` (when the first is unavailable)
-- `Cost of Revenue = Revenue − Gross Profit`
-- `Pre-tax Income = Net Income + Income Tax`
-- `Total Liabilities = Total Assets − Equity`
+## Financial Variables (30 total)
 
-### Pass 3 — Gemini fallback
-Variables still missing are sent to Gemini in a single batched call per fiscal year. Gemini returns null rather than guessing — a missing value is better than a wrong one.
+**Income Statement:** Revenue, Cost of Revenue, Gross Profit, R&D, SG&A, Operating Income, Interest Expense, Pre-tax Income, Income Tax, Net Income, EPS Basic, EPS Diluted, Shares Basic, Shares Diluted
 
----
+**Balance Sheet:** Cash, Accounts Receivable, Inventory, Goodwill, Current Assets, Total Assets, Current Liabilities, Total Debt, Total Liabilities, Equity
+
+**Cash Flow:** Operating CF, CapEx, Depreciation, Stock-Based Comp, Stock Buybacks, Dividends Paid
+
+## Metrics View
+
+A SQL view `metrics` is created automatically with: `revenue_growth`, `gross_margin`, `operating_margin`, `fcf_margin`, `ps_ratio`, `debt_equity`, `price`.
 
 ## Project Structure
 
 ```
 Financial-Analysis/
-├── main.py                          # Pipeline runner
+├── main.py                        # Pipeline runner
+├── collect_prices.py              # Stock price collection (run after main.py)
+├── requirements.txt
 ├── config/
-│   └── .env                         # API keys (not committed)
+│   └── .env                       # API keys (not committed)
+├── data/
+│   └── financials.db              # SQLite output
+├── logs/
+│   └── audit.jsonl                # Extracted values with source labels
 └── src/
     ├── collectors/
-    │   ├── tags.py                  # SEC EDGAR fetching
-    │   ├── annual.py                # 10-K extraction
-    │   ├── financial_variables.py   # XBRL tag lists
-    │   ├── sector_variables.py      # Sector-specific variable sets
-    │   └── gemini_fallback.py       # Gemini fallback
-    └── storage/
-        └── database.py              # Schema and upsert helpers
+    │   ├── edgar.py               # SEC EDGAR fetching
+    │   └── extractor.py           # DeepSeek V4 Flash extraction
+    ├── storage/
+    │   └── database.py            # Schema and save helpers
+    └── analysis/
+        └── metrics.py             # SQL metrics view
 ```
 
----
+## Setup
 
-> **Status:** In progress. Usage instructions will be shared once complete.
+```bash
+pip install -r requirements.txt
+```
+
+Create `config/.env`:
+```
+AZURE_DEEPSEEK_V4_ENDPOINT=https://...
+AZURE_DEEPSEEK_V4_API_KEY=...
+```
+
+## Usage
+
+```bash
+# Collect financial data
+python main.py
+
+# Collect stock prices (after financial data is collected)
+python collect_prices.py
+```
+
+Configure `main.py` before running:
+```python
+SECTOR_FILTER = ["Information Technology"]   # [] for all sectors
+N_ANNUAL      = 10                           # years per company
+TRIAL_LIMIT   = None                         # set to N to test on first N companies
+```
+
+Progress is saved to `progress.json` — safe to stop and re-run at any time.

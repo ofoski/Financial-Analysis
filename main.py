@@ -1,31 +1,26 @@
 import json
 import logging
+import sqlite3
 import time
 from datetime import date
 from pathlib import Path
 
-import requests
-
-from src.collectors.tags import HEADERS, TICKERS_URL, fetch_ns
-from src.collectors.annual import extract_annual
-from src.collectors.accounting import apply_accounting_identities
-from src.storage.database import init_db, upsert_company
+from src.collectors.edgar import get_cik_map, get_10k_filings, fetch_filing_tables
+from src.collectors.extractor import extract_from_filing
+from src.storage.database import COLUMN_MAP, init_db, save_company, save_annual
 from src.analysis.metrics import create_metrics_view
 
-# ── Sector filter ──────────────────────────────────────────────────────────────
-# Set to a list of sector names to only collect those sectors.
-# Set to [] to collect all sectors (full Russell 3000 run).
-SECTOR_FILTER = ["Information Technology"]
-
-# ── Company list ───────────────────────────────────────────────────────────────
-COMPANIES = [
-    entry["ticker"]
-    for entry in json.loads(Path("config/russell_3000_equity_holdings.json").read_text())
-]
+# ── Configuration ─────────────────────────────────────────────────────────────
+SECTOR_FILTER = []
+N_ANNUAL      = 1   # years to collect per company
+TRIAL_LIMIT   = None
 
 PROGRESS_FILE = Path("progress.json")
 DB_PATH       = Path("data/financials.db")
-AUDIT_PATH    = Path("data/extraction_audit.jsonl")
+
+_raw            = json.loads(Path("config/russell_3000_equity_holdings.json").read_text())
+COMPANIES       = ["AAPL"]
+COMPANY_SECTORS = {e["ticker"].upper(): e.get("sector") for e in _raw}
 
 logging.basicConfig(
     filename="errors.log",
@@ -34,116 +29,151 @@ logging.basicConfig(
 )
 
 
-def load_cik_map():
-    """
-    Download the full SEC ticker-to-CIK mapping in one request.
-    Also captures the company name from the same response.
-    Returns a dict like {"AAPL": {"cik": "0000320193", "name": "Apple Inc."}, ...}.
-    """
-    resp = requests.get(TICKERS_URL, headers=HEADERS, timeout=15)
-    resp.raise_for_status()
-    result = {}
-    for v in resp.json().values():
-        ticker = v["ticker"].upper()
-        result[ticker] = {
-            "cik":  str(v["cik_str"]).zfill(10),
-            "name": v.get("title", ""),
-        }
-    return result
-
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def load_progress():
-    """Read the set of tickers already completed from progress.json."""
     if PROGRESS_FILE.exists():
         return set(json.loads(PROGRESS_FILE.read_text()))
     return set()
 
 
 def save_progress(done):
-    """Save the set of completed tickers to progress.json."""
     PROGRESS_FILE.write_text(json.dumps(sorted(done)))
 
 
-def load_company_config():
-    """
-    Load sector data from the Russell 3000 config file.
-    Returns a dict: { "AAPL": {"sector": ...}, ... }
-    """
-    config_path = Path("config/russell_3000_equity_holdings.json")
-    if not config_path.exists():
-        return {}
-    entries = json.loads(config_path.read_text())
-    return {
-        e["ticker"].upper(): {"sector": e.get("sector")}
-        for e in entries
-    }
+def _is_year_saved(db_path, ticker, fiscal_year_end):
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT 1 FROM financial_data_annual "
+            "WHERE ticker = ? AND fiscal_year_end = ? "
+            "AND revenue IS NOT NULL AND current_assets IS NOT NULL",
+            (ticker, fiscal_year_end),
+        ).fetchone()
+    return row is not None
 
 
-def process_ticker(ticker, cik_map, company_config, db_path, audit_path):
-    """
-    Run the full collection pipeline for one ticker:
-    1. Look up CIK and company name from the pre-loaded map
-    2. Save company info (name, sector) to the companies table
-    3. Download XBRL facts from SEC
-    4. Extract annual data and save each fiscal year to the DB
-    """
-    entry = cik_map.get(ticker.upper())
-    if not entry:
-        raise ValueError(f"CIK not found for {ticker}")
-
-    cik  = entry["cik"]
-    name = entry["name"]
-
-    ns = fetch_ns(cik)  # fetch first — only insert company if this succeeds
-
-    extra  = company_config.get(ticker.upper(), {})
-    sector = extra.get("sector")
-    upsert_company(db_path, ticker, name=name, sector=sector)
-
-    today = date.today().isoformat()
-    extract_annual(ns, ticker, cik, db_path=db_path, collected_date=today, sector=sector, audit_path=audit_path)
-    apply_accounting_identities(db_path, ticker)
+def _count_saved_years(db_path, ticker):
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM financial_data_annual "
+            "WHERE ticker = ? AND revenue IS NOT NULL AND current_assets IS NOT NULL",
+            (ticker,),
+        ).fetchone()
+    return row[0] if row else 0
 
 
+# ── Core pipeline ─────────────────────────────────────────────────────────────
+
+def _drop_incomplete(db_path, ticker):
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "DELETE FROM financial_data_annual WHERE ticker = ? AND current_assets IS NULL",
+            (ticker,),
+        )
+        conn.commit()
+
+
+def collect_ticker(ticker, cik_entry, db_path):
+    cik_int = int(cik_entry["cik"])
+    save_company(db_path, ticker, name=cik_entry["name"], sector=COMPANY_SECTORS.get(ticker))
+
+    filings = get_10k_filings(cik_entry["cik"])
+    if not filings:
+        raise ValueError("No 10-K filings found")
+
+    today        = date.today().isoformat()
+    saved_before = _count_saved_years(db_path, ticker)
+
+    # Every-2nd filing: each overlaps 1 year so the gap-year balance sheet is filled by the next filing.
+    n_filings = (N_ANNUAL + 1) // 2
+    selected  = filings[0::2][:n_filings]
+
+    for accession, period_end in selected:
+        if _count_saved_years(db_path, ticker) >= N_ANNUAL:
+            break
+        if _is_year_saved(db_path, ticker, period_end) and _count_saved_years(db_path, ticker) >= N_ANNUAL:
+            continue
+
+        try:
+            tables = fetch_filing_tables(cik_int, accession)
+        except Exception as exc:
+            logging.error("%s %s: fetch failed: %s", ticker, accession, exc)
+            continue
+
+        try:
+            year_rows = extract_from_filing(tables, ticker)
+        except RuntimeError:
+            raise
+        except Exception as exc:
+            logging.error("%s %s: extraction failed: %s", ticker, accession, exc)
+            print(f"\n  Skipping filing {accession}: {exc}")
+            continue
+
+        for year in year_rows:
+            fy_end = year.get("fiscal_year_end")
+            if not fy_end:
+                continue
+            data = {}
+            for var_name, col in COLUMN_MAP.items():
+                item = year.get(var_name)
+                val  = item.get("value") if isinstance(item, dict) else item
+                data[col] = float(val) if isinstance(val, (int, float)) else None
+            save_annual(db_path, ticker, fy_end, data, collected_date=today)
+
+    _drop_incomplete(db_path, ticker)
+    return _count_saved_years(db_path, ticker) - saved_before
+
+
+# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     db_path = init_db(DB_PATH)
     create_metrics_view(db_path)
-    done    = load_progress()
+    done = load_progress()
 
     print("Loading CIK map from SEC...")
     try:
-        cik_map = load_cik_map()
+        cik_map = get_cik_map()
     except Exception as exc:
         logging.error("Failed to load CIK map: %s", exc)
-        print(f"ERROR: could not load CIK map -- {exc}")
+        print(f"ERROR: {exc}")
         return
 
-    company_config = load_company_config()
-
     remaining = [t for t in COMPANIES if t not in done]
-
     if SECTOR_FILTER:
-        remaining = [t for t in remaining if company_config.get(t, {}).get("sector") in SECTOR_FILTER]
-        print(f"Sector filter active: {SECTOR_FILTER}")
+        remaining = [t for t in remaining if COMPANY_SECTORS.get(t) in SECTOR_FILTER]
+        print(f"Sector filter: {SECTOR_FILTER}")
+    if TRIAL_LIMIT:
+        remaining = remaining[:TRIAL_LIMIT]
+        print(f"Trial mode: {TRIAL_LIMIT} companies")
 
-    print(f"{len(done)} already done, {len(remaining)} remaining\n")
+    print(f"{len(done)} done, {len(remaining)} remaining\n")
 
     for i, ticker in enumerate(remaining, 1):
+        cik_entry = cik_map.get(ticker.upper())
+        if not cik_entry:
+            print(f"[{i}/{len(remaining)}] {ticker} — CIK not found, skipping")
+            continue
+
         print(f"[{i}/{len(remaining)}] {ticker} ...", end=" ", flush=True)
+
         try:
-            process_ticker(ticker, cik_map, company_config, db_path, AUDIT_PATH)
+            saved = collect_ticker(ticker, cik_entry, db_path)
             done.add(ticker)
             save_progress(done)
-            print("OK")
+            print(f"OK ({saved} years saved)")
+        except RuntimeError as exc:
+            logging.error("%s: %s", ticker, exc)
+            print(f"\nStopped: {exc}")
+            break
         except Exception as exc:
             logging.error("%s: %s", ticker, exc)
-            print("ERROR -- see errors.log")
+            print("ERROR — see errors.log")
 
         if i < len(remaining):
             time.sleep(0.5)
 
-    print(f"\nDone. {len(done)}/{len(COMPANIES)} tickers collected.")
+    print(f"\nDone. {len(done)}/{len(COMPANIES)} collected.")
 
 
 if __name__ == "__main__":

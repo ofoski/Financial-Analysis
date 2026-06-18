@@ -13,10 +13,7 @@ _METRICS_VIEW_SQL = """
         ROUND(f.gross_profit     / NULLIF(f.revenue, 0), 4) AS gross_margin,
         ROUND(f.operating_income / NULLIF(f.revenue, 0), 4) AS operating_margin,
         ROUND((f.operating_cf - f.capex) / NULLIF(f.revenue, 0), 4) AS fcf_margin,
-        ROUND(
-            (f.net_income / NULLIF(f.eps_basic, 0) * p.price) / NULLIF(f.revenue, 0),
-            4
-        ) AS ps_ratio,
+        ROUND(f.shares_basic * p.price / NULLIF(f.revenue, 0), 4) AS ps_ratio,
         ROUND(f.total_debt / NULLIF(f.equity, 0), 4) AS debt_equity,
         p.price
     FROM financial_data_annual f

@@ -1,9 +1,3 @@
-"""
-Collect stock prices at each fiscal year end for all companies in the DB.
-Run:    python collect_prices.py
-Ctrl+C to stop anytime — already saved rows are skipped on re-run.
-"""
-
 import sqlite3
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -33,7 +27,7 @@ for i, (ticker, dates) in enumerate(ticker_dates.items(), 1):
     print(f"[{i}/{total}] {ticker} ...", end=" ", flush=True)
     try:
         earliest = datetime.strptime(min(dates), "%Y-%m-%d") - timedelta(days=7)
-        hist = yf.Ticker(ticker).history(start=earliest.strftime("%Y-%m-%d"), end="2026-12-31")
+        hist = yf.Ticker(ticker).history(start=earliest.strftime("%Y-%m-%d"), end=datetime.today().strftime("%Y-%m-%d"))
         if hist.empty:
             print("no data")
             continue

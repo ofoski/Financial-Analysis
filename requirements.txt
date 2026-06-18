@@ -1,5 +1,5 @@
 requests
-pandas
 python-dotenv
-google-genai
+openai
+beautifulsoup4
 yfinance
