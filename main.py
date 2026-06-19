@@ -12,14 +12,14 @@ from src.analysis.metrics import create_metrics_view
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 SECTOR_FILTER = []
-N_ANNUAL      = 1   # years to collect per company
+N_ANNUAL      = 10  # years to collect per company
 TRIAL_LIMIT   = None
 
 PROGRESS_FILE = Path("progress.json")
 DB_PATH       = Path("data/financials.db")
 
 _raw            = json.loads(Path("config/russell_3000_equity_holdings.json").read_text())
-COMPANIES       = ["AAPL"]
+COMPANIES       = [e["ticker"].upper() for e in _raw[:10]]
 COMPANY_SECTORS = {e["ticker"].upper(): e.get("sector") for e in _raw}
 
 logging.basicConfig(
@@ -32,27 +32,19 @@ logging.basicConfig(
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def load_progress():
+    """Load the set of already-completed tickers from the progress file."""
     if PROGRESS_FILE.exists():
         return set(json.loads(PROGRESS_FILE.read_text()))
     return set()
 
 
 def save_progress(done):
+    """Save the set of completed tickers to the progress file."""
     PROGRESS_FILE.write_text(json.dumps(sorted(done)))
 
 
-def _is_year_saved(db_path, ticker, fiscal_year_end):
-    with sqlite3.connect(db_path) as conn:
-        row = conn.execute(
-            "SELECT 1 FROM financial_data_annual "
-            "WHERE ticker = ? AND fiscal_year_end = ? "
-            "AND revenue IS NOT NULL AND current_assets IS NOT NULL",
-            (ticker, fiscal_year_end),
-        ).fetchone()
-    return row is not None
-
-
 def _count_saved_years(db_path, ticker):
+    """Return how many valid annual rows exist for a ticker in the database."""
     with sqlite3.connect(db_path) as conn:
         row = conn.execute(
             "SELECT COUNT(*) FROM financial_data_annual "
@@ -65,6 +57,7 @@ def _count_saved_years(db_path, ticker):
 # ── Core pipeline ─────────────────────────────────────────────────────────────
 
 def _drop_incomplete(db_path, ticker):
+    """Delete rows that are missing balance sheet data (gap years not yet filled)."""
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             "DELETE FROM financial_data_annual WHERE ticker = ? AND current_assets IS NULL",
@@ -74,6 +67,7 @@ def _drop_incomplete(db_path, ticker):
 
 
 def collect_ticker(ticker, cik_entry, db_path):
+    """Fetch filings from EDGAR, extract financials, and save all years for one ticker."""
     cik_int = int(cik_entry["cik"])
     save_company(db_path, ticker, name=cik_entry["name"], sector=COMPANY_SECTORS.get(ticker))
 
@@ -88,11 +82,9 @@ def collect_ticker(ticker, cik_entry, db_path):
     n_filings = (N_ANNUAL + 1) // 2
     selected  = filings[0::2][:n_filings]
 
-    for accession, period_end in selected:
+    for accession, _ in selected:
         if _count_saved_years(db_path, ticker) >= N_ANNUAL:
             break
-        if _is_year_saved(db_path, ticker, period_end) and _count_saved_years(db_path, ticker) >= N_ANNUAL:
-            continue
 
         try:
             tables = fetch_filing_tables(cik_int, accession)
@@ -127,6 +119,7 @@ def collect_ticker(ticker, cik_entry, db_path):
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
+    """Run the full collection pipeline for all companies in the list."""
     db_path = init_db(DB_PATH)
     create_metrics_view(db_path)
     done = load_progress()

@@ -68,6 +68,15 @@ def init_db(db_path):
                 FOREIGN KEY (ticker) REFERENCES companies(ticker)
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS validation (
+                ticker          TEXT NOT NULL,
+                fiscal_year_end TEXT NOT NULL,
+                check_name      TEXT NOT NULL,
+                detail          TEXT,
+                PRIMARY KEY (ticker, fiscal_year_end, check_name)
+            )
+        """)
         conn.commit()
     return db_path
 

@@ -180,6 +180,7 @@ Return ONLY a valid JSON object with this exact structure — one object per fis
 }}"""
 
     response = _call_api(_get_client(), prompt)
+    time.sleep(4)  # stay under 20 RPM Azure limit
     years    = json.loads(response.choices[0].message.content).get("years", [])
 
     for year in years:
