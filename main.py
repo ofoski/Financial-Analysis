@@ -8,7 +8,6 @@ from pathlib import Path
 from src.collectors.edgar import get_cik_map, get_10k_filings, fetch_filing_tables
 from src.collectors.extractor import extract_from_filing
 from src.storage.database import COLUMN_MAP, init_db, save_company, save_annual
-from src.analysis.metrics import create_metrics_view
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 SECTOR_FILTER = []
@@ -19,7 +18,7 @@ PROGRESS_FILE = Path("progress.json")
 DB_PATH       = Path("data/financials.db")
 
 _raw            = json.loads(Path("config/russell_3000_equity_holdings.json").read_text())
-COMPANIES       = [e["ticker"].upper() for e in _raw[:10]]
+COMPANIES       = [e["ticker"].upper() for e in _raw[:20]]
 COMPANY_SECTORS = {e["ticker"].upper(): e.get("sector") for e in _raw}
 
 logging.basicConfig(
@@ -121,7 +120,6 @@ def collect_ticker(ticker, cik_entry, db_path):
 def main():
     """Run the full collection pipeline for all companies in the list."""
     db_path = init_db(DB_PATH)
-    create_metrics_view(db_path)
     done = load_progress()
 
     print("Loading CIK map from SEC...")

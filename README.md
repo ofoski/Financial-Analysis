@@ -40,10 +40,23 @@ Run `validate.py` after collection to check data quality. Failures are written t
 | `revenue_yoy` | YoY revenue change ≤ 300% |
 | `revenue_duplicate` | Revenue not identical to previous year |
 
+## Analysis
 
-## Metrics View
+`metrics.py` and `valuation.py` create SQL views when run manually. They are not run automatically by `main.py` — run them only after data quality issues are resolved.
 
-A SQL view `metrics` is created automatically with: `revenue_growth`, `gross_margin`, `operating_margin`, `fcf_margin`, `ps_ratio`, `debt_equity`, `price`.
+**Metrics view** (`metrics`): `revenue_growth`, `gross_margin`, `operating_margin`, `fcf_margin`, `ps_ratio`, `debt_equity`, `roic`, `rule_of_40`, `price`
+
+**Valuations view** (`valuations`): fair value estimates per company per year using three methods:
+
+| Method | Formula | Works when |
+|---|---|---|
+| `graham_number` | `sqrt(22.5 × EPS Diluted × Book Value per Share)` | EPS and equity are positive |
+| `owner_earnings_value` | `(Net Income + Depreciation − CapEx) / Shares Diluted × 15` | Owner earnings are positive |
+| `peg_fair_value` | `EPS Diluted × revenue_growth%` | EPS and revenue growth are positive |
+
+Each method also produces a `price_to_X` ratio — below 1.0 means the stock is trading below that method's fair value.
+
+**Note:** Stock prices are collected without split adjustment (`auto_adjust=False`) so they match the per-share financial data as reported in each SEC filing.
 
 ## Project Structure
 
@@ -66,7 +79,8 @@ Financial-Analysis/
     ├── storage/
     │   └── database.py            # Schema and save helpers
     └── analysis/
-        └── metrics.py             # SQL metrics view
+        ├── metrics.py             # SQL metrics view
+        └── valuation.py           # SQL valuations view (Graham, Owner Earnings, PEG)
 ```
 
 ## Setup
@@ -79,19 +93,6 @@ Create `config/.env`:
 ```
 AZURE_DEEPSEEK_V4_ENDPOINT=https://...
 AZURE_DEEPSEEK_V4_API_KEY=...
-```
-
-## Usage
-
-```bash
-# Collect financial data
-python main.py
-
-# Check data quality
-python validate.py
-
-# Collect stock prices (after financial data is collected)
-python collect_prices.py
 ```
 
 Configure `main.py` before running:
