@@ -8,7 +8,7 @@ def load_data(db_path):
     with sqlite3.connect(db_path) as conn:
         return pd.read_sql("""
             SELECT f.*, p.price
-            FROM financial_data_annual f
+            FROM financial_data_clean f
             LEFT JOIN prices p ON f.ticker = p.ticker AND f.fiscal_year_end = p.date
             ORDER BY f.ticker, f.fiscal_year_end
         """, conn)

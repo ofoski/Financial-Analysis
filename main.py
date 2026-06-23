@@ -18,7 +18,7 @@ PROGRESS_FILE = Path("progress.json")
 DB_PATH       = Path("data/financials.db")
 
 _raw            = json.loads(Path("config/russell_3000_equity_holdings.json").read_text())
-COMPANIES       = [e["ticker"].upper() for e in _raw[:20]]
+COMPANIES       = [e["ticker"].upper() for e in _raw[:40]]
 COMPANY_SECTORS = {e["ticker"].upper(): e.get("sector") for e in _raw}
 
 logging.basicConfig(

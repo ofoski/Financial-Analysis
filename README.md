@@ -18,9 +18,32 @@ Collects 10 years of fundamental financial data for Russell 3000 companies from 
 
 **Cash Flow:** Operating CF, CapEx, Depreciation, Stock-Based Comp, Stock Buybacks, Dividends Paid
 
+## Pipeline Order
+
+Run scripts in this sequence after collection:
+
+```
+python main.py            # 1. Collect financials from SEC EDGAR
+python validate.py        # 2. Check raw data quality — fix any issues before continuing
+python clean.py           # 3. Apply split corrections → writes financial_data_clean
+python collect_prices.py  # 4. Fetch stock prices from yfinance
+python src/analysis/metrics.py    # 5. Compute metrics
+python src/analysis/valuation.py  # 6. Compute valuations
+```
+
+## Data Cleaning
+
+`clean.py` reads `financial_data_annual` (never modifies it) and writes a corrected copy to `financial_data_clean`.
+
+**What it fixes — stock split inconsistency:** SEC filings report shares as of the filing date. A 2021 filing retroactively adjusts 2019 shares for any splits, but the original 2019 filing does not. This means the same fiscal year can have different share counts depending on which filing it came from.
+
+`clean.py` detects year-over-year jumps in `shares_diluted` above 1.8× and applies the split ratio to all earlier years, making shares and EPS consistent across the full history.
+
+All downstream analysis (`metrics.py`, `valuation.py`) reads from `financial_data_clean`.
+
 ## Data Validation
 
-Run `validate.py` after collection to check data quality. Failures are written to the `validation` table in the database. Empty table means clean data.
+Run `validate.py` before `clean.py` to check raw collected data quality. Failures are written to the `validation` table in the database. Empty table means clean data.
 
 **Checks performed:**
 
@@ -42,7 +65,7 @@ Run `validate.py` after collection to check data quality. Failures are written t
 
 ## Analysis
 
-`metrics.py` and `valuation.py` create SQL views when run manually. They are not run automatically by `main.py` — run them only after data quality issues are resolved.
+`metrics.py` and `valuation.py` read from `financial_data_clean` and must be run after `clean.py`. They are not run automatically by `main.py`.
 
 **Metrics view** (`metrics`): `revenue_growth`, `gross_margin`, `operating_margin`, `fcf_margin`, `ps_ratio`, `debt_equity`, `roic`, `rule_of_40`, `price`
 
@@ -56,15 +79,16 @@ Run `validate.py` after collection to check data quality. Failures are written t
 
 Each method also produces a `price_to_X` ratio — below 1.0 means the stock is trading below that method's fair value.
 
-**Note:** Stock prices are collected without split adjustment (`auto_adjust=False`) so they match the per-share financial data as reported in each SEC filing.
+**Note:** Stock prices are collected with split adjustment (yfinance default `auto_adjust=True`) so they are consistent with retroactively adjusted share counts from newer SEC filings.
 
 ## Project Structure
 
 ```
 Financial-Analysis/
-├── main.py                        # Pipeline runner
-├── validate.py                    # Data quality checks
-├── collect_prices.py              # Stock price collection (run after main.py)
+├── main.py                        # Pipeline runner — collects from SEC EDGAR
+├── validate.py                    # Data quality checks on raw collected data
+├── clean.py                       # Split correction — writes financial_data_clean
+├── collect_prices.py              # Stock price collection via yfinance
 ├── requirements.txt
 ├── config/
 │   └── .env                       # API keys (not committed)
