@@ -114,6 +114,7 @@ def extract_from_filing(tables, ticker):
     cashflow = tables.get("cash_flow",        "(not available)")
 
     prompt = f"""You are an expert accountant extracting financial data from SEC 10-K filings for {ticker}.
+You know this company, its industry, and how it reports its financials. Use that knowledge throughout.
 
 The three tables below are taken directly from the official SEC EDGAR filing.
 Each table shows 2-3 fiscal years of data. You must extract ALL years shown.
@@ -131,22 +132,7 @@ VARIABLES TO EXTRACT (for every fiscal year shown):
 {_VAR_LINES}
 
 RULES:
-1. Extract every fiscal year shown in the tables — do not skip any year.
-2. Always use the consolidated total line — never a segment, product line, or geography breakdown.
-3. Check the table header for the unit (e.g. "in millions", "in thousands", "in dollars").
-   - If in millions: copy the number exactly as shown.
-   - If in thousands: divide by 1,000 before reporting.
-   - If in actual dollars (no unit label or "in dollars"): divide by 1,000,000 before reporting.
-   Always report in millions.
-4. Parentheses in financial tables mean negative — always convert them: "(1,234)" → -1234.
-   Exception: variables noted as "Return as a positive number" below must always be positive,
-   even if the filing shows them in parentheses.
-   Return numbers as plain integers or decimals — no $ signs, no commas.
-   Example: "$ 416,161" → 416161    |    "(1,234)" → -1234    |    "6.08" → 6.08
-   If a cell shows "—" or is blank, return null.
-5. EPS (Basic and Diluted) are per-share amounts — do not multiply by millions.
-6. If a variable requires summing components (e.g. Total Debt = short-term debt + long-term debt), sum them.
-7. Use only the correct source table for each variable:
+1. Use only the correct source table for each variable:
    - Revenue, Cost of Revenue, Gross Profit, R&D, SG&A, Operating Income, Interest Expense,
      Pre-tax Income, Income Tax, Net Income, EPS Basic, EPS Diluted,
      Shares Basic, Shares Diluted → INCOME STATEMENT only
@@ -154,20 +140,35 @@ RULES:
      Current Liabilities, Total Debt, Total Liabilities, Equity → BALANCE SHEET only
    - Operating CF, CapEx, Depreciation, Stock-Based Comp, Stock Buybacks,
      Dividends Paid → CASH FLOW STATEMENT only
-8. For any variable that represents a GROSS amount (Interest Expense, CapEx, Stock Buybacks,
-   Dividends Paid): only extract it if it appears as a standalone line. Never extract it from
-   a combined or net line that bundles multiple items together. If the income statement shows
-   a single line that nets interest income against interest expense (or groups them with other
-   items), that line does not represent Interest Expense — return null.
-9. Each fiscal year in your output must contain ONLY values from that year's column. Never read
-   values from a comparison year column shown alongside the target year in the same table.
-10. If a variable is not present and cannot be derived, return null for value and null for source.
-11. If a variable does not apply to this company (e.g. Inventory for a pure software company), return null.
-12. fiscal_year_end: convert the column header date to YYYY-MM-DD format.
-    Example: "Sep. 27, 2025" → "2025-09-27"  |  "December 31, 2023" → "2023-12-31"
-13. source: write the exact line item label(s) from the table you used to extract the value.
-    If you summed multiple lines, list them all separated by " + ".
-    Example: "Total net revenue"  |  "Short-term borrowings + Current portion of long-term debt + Long-term debt"
+2. Extract every fiscal year shown in the tables — do not skip any year. Use only values from
+   that year's column — never read from a comparison year shown alongside the target year.
+3. Always use the consolidated total line — never a segment, product line, or geography breakdown.
+   For gross amounts (Interest Expense, CapEx, Stock Buybacks, Dividends Paid), only extract from
+   a standalone line — never from a combined or net line that bundles multiple items together.
+4. Check the table header for the unit. Dollar amounts and share counts have separate unit labels —
+   "shares in Millions" applies ONLY to share counts, not to dollar values.
+   Dollar scaling is only indicated by "$ in Millions", "$ in Thousands", "$ in Billions" etc.
+   - If header says "$ in Millions": copy dollar values exactly as shown.
+   - If header says "$ in Thousands": divide dollar values by 1,000.
+   - If no dollar unit label (or header only mentions share units): divide dollar values by 1,000,000.
+   Always report dollar amounts in millions.
+5. Parentheses mean negative — convert them: "(1,234)" → -1234.
+   Exception: variables noted as "Return as a positive number" must always be positive.
+   Return plain integers or decimals — no $ signs, no commas.
+   Example: "$ 416,161" → 416161    |    "(1,234)" → -1234    |    "6.08" → 6.08
+   If a cell shows "—" or is blank, return null.
+6. If a variable requires summing components (e.g. Total Debt = short-term debt + long-term debt),
+   sum them.
+7. Use your knowledge of {ticker} and its industry to find each variable. Industry-specific or
+   company-specific labels for the same financial measurement are acceptable — extract them and
+   record the actual label as the source. Return null only if the concept genuinely does not exist
+   in this company's financials. Never assign the same source line to two different variables —
+   if a line is already used for one variable in your answer, it cannot also answer another.
+8. fiscal_year_end: convert the column header date to YYYY-MM-DD format.
+   Example: "Sep. 27, 2025" → "2025-09-27"  |  "December 31, 2023" → "2023-12-31"
+   source: write the exact line item label(s) from the table. If you summed multiple lines,
+   list them separated by " + ".
+   Example: "Total net revenue"  |  "Short-term borrowings + Current portion of long-term debt + Long-term debt"
 
 Return ONLY a valid JSON object with this exact structure — one object per fiscal year:
 {{
