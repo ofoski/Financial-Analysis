@@ -50,14 +50,54 @@ def get_10k_filings(cik):
 
 
 def _find_statement_files(cik_int, accession):
-    """Find the income statement, balance sheet, and cash flow HTML files inside a filing."""
+    """
+    Read FilingSummary.xml from the filing and return the HTML filenames for the
+    three financial statements: income statement, balance sheet, cash flow.
+
+    HOW THE SELECTION WORKS
+    -----------------------
+    Every 10-K filing on SEC EDGAR contains a FilingSummary.xml that lists all HTML
+    tables in that filing. Each table has a ShortName (the display label) and a
+    MenuCategory. This function scans those names and picks one file for each statement.
+
+    Companies use different wording for the same statement. Known examples:
+
+    INCOME STATEMENT
+      Selected when ShortName contains: "income", "operations", or "earnings"
+        "Consolidated Statements of Operations"           → AAPL, CSCO, ADBE
+        "Consolidated Statements of Income"               → NVDA, TXN
+        "Consolidated Statements of Earnings"             → some older filings
+        "Consolidated Statements of Comprehensive Income" → PLXS, VRSN, FICO, NOW
+            Some companies combine the income statement and OCI into one table.
+            It still contains revenue and net income, so it must be selected.
+      NOT selected when ShortName contains "other comprehensive":
+        "Statements of Other Comprehensive Income"
+            This is a separate table with only currency/investment adjustments —
+            no revenue, no net income. The word "other" tells them apart.
+
+    BALANCE SHEET
+      Selected when ShortName contains: "balance" or "financial position"
+        "Consolidated Balance Sheets"                     → most companies
+        "Consolidated Statements of Financial Position"   → some companies
+      NOT selected: any name containing "parenthetical"
+        "Consolidated Balance Sheets (Parenthetical)"
+            Parenthetical tables contain footnote details, not the main numbers.
+
+    CASH FLOW STATEMENT
+      Selected when ShortName contains: "cash"
+        "Consolidated Statements of Cash Flows"           → most companies
+
+    SEARCH ORDER
+      Pass 1 — MenuCategory = "Statements" (the main financial tables)
+      Pass 2 — MenuCategory = "Uncategorized" (fallback for companies like NVDA
+                that tag their tables differently in the XML)
+    """
     url  = f"{ARCHIVES_BASE}/{cik_int}/{accession}/FilingSummary.xml"
     resp = requests.get(url, headers=HEADERS, timeout=15)
     resp.raise_for_status()
     time.sleep(0.5)
 
     found = {}
-    # Two passes: Statements first, then Uncategorized as fallback (needed for some companies e.g. NVDA)
     for categories in (("Statements",), ("Uncategorized",)):
         for report in ET.fromstring(resp.text).iter("Report"):
             html_file = report.findtext("HtmlFileName", "")
@@ -70,8 +110,8 @@ def _find_statement_files(cik_int, accession):
             if "parenthetical" in name:
                 continue
 
-            is_income           = any(w in name for w in ("income", "operations", "earnings"))
-            is_comprehensive    = "comprehensive" in name and "operations" not in name and "earnings" not in name
+            is_income        = any(w in name for w in ("income", "operations", "earnings"))
+            is_comprehensive = "other comprehensive" in name
 
             if "income_statement" not in found and is_income and not is_comprehensive:
                 found["income_statement"] = html_file
