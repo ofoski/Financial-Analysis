@@ -22,9 +22,9 @@ def compute_valuations(df):
     df["revenue_growth"] = df.groupby("ticker")["revenue"].pct_change()
 
     # ── Graham Number ──────────────────────────────────────────────────────────
-    # Formula: sqrt(22.5 × EPS Diluted × Book Value per Share)
-    # 22.5 = Graham's constant (15× P/E × 1.5× P/B)
-    # Only valid when EPS and equity are both positive
+    # Maximum fair price = sqrt(22.5 × EPS × Book Value per Share)
+    # 22.5 is a fixed constant (Graham's P/E limit of 15 × his P/B limit of 1.5)
+    # Requires positive EPS and positive equity.
     graham_valid = (df["eps_diluted"] > 0) & (df["equity"] > 0) & (df["shares_diluted"] > 0)
     df["graham_number"] = np.nan
     df.loc[graham_valid, "graham_number"] = np.sqrt(
@@ -35,9 +35,10 @@ def compute_valuations(df):
     ).round(4)
 
     # ── Owner Earnings Value ───────────────────────────────────────────────────
-    # Formula: (Net Income + Depreciation − CapEx) / Shares Diluted × 15
-    # 15× multiple = 6.7% earnings yield (Buffett's minimum acceptable return)
-    # Only valid when owner earnings are positive
+    # Fair price per share = (Net Income + D&A − CapEx) / Shares × 15
+    # D&A is added back (non-cash charge); CapEx is subtracted (real cash to maintain business)
+    # ×15 means paying 15 years of real cash earnings → implies 6.7% annual return
+    # Requires positive owner earnings.
     owner_earnings = df["net_income"] + df["depreciation"] - df["capex"]
     oe_valid = (df["shares_diluted"] > 0) & (owner_earnings > 0)
     df["owner_earnings_value"] = np.nan
@@ -46,9 +47,9 @@ def compute_valuations(df):
     ).round(4)
 
     # ── PEG Fair Value ─────────────────────────────────────────────────────────
-    # Formula: EPS Diluted × revenue_growth%
-    # Fair P/E equals the growth rate (Peter Lynch principle)
-    # Only valid when EPS and revenue growth are both positive
+    # Fair price per share = EPS × revenue growth rate (%)
+    # Based on Lynch's rule: fair P/E equals the growth rate in percent
+    # Requires positive EPS and positive revenue growth.
     peg_valid = (df["eps_diluted"] > 0) & (df["revenue_growth"] > 0)
     df["peg_fair_value"] = np.nan
     df.loc[peg_valid, "peg_fair_value"] = (

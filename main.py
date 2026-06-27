@@ -10,9 +10,9 @@ from src.collectors.extractor import extract_from_filing
 from src.storage.database import COLUMN_MAP, init_db, save_company, save_annual
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-SECTOR_FILTER = []
+SECTOR_FILTER = ["Information Technology"]
 N_ANNUAL      = 10  # years to collect per company
-TRIAL_LIMIT   = None
+N_COLLECT     = 2  # max companies to collect this run — set to e.g. 10, or None for all
 
 PROGRESS_FILE = Path("progress.json")
 DB_PATH       = Path("data/financials.db")
@@ -20,7 +20,7 @@ DB_PATH       = Path("data/financials.db")
 _raw            = json.loads(Path("config/russell_3000_equity_holdings.json").read_text())
 COMPANY_SECTORS = {e["ticker"].upper(): e.get("sector") for e in _raw}
 
-COMPANIES = [e["ticker"].upper() for e in _raw[:20]]
+COMPANIES = [e["ticker"].upper() for e in _raw if not SECTOR_FILTER or e.get("sector") in SECTOR_FILTER]
 
 logging.basicConfig(
     filename="errors.log",
@@ -135,9 +135,9 @@ def main():
     if SECTOR_FILTER:
         remaining = [t for t in remaining if COMPANY_SECTORS.get(t) in SECTOR_FILTER]
         print(f"Sector filter: {SECTOR_FILTER}")
-    if TRIAL_LIMIT:
-        remaining = remaining[:TRIAL_LIMIT]
-        print(f"Trial mode: {TRIAL_LIMIT} companies")
+    if N_COLLECT:
+        remaining = remaining[:N_COLLECT]
+        print(f"Collecting: {N_COLLECT} companies")
 
     print(f"{len(done)} done, {len(remaining)} remaining\n")
 

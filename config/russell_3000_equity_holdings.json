@@ -7290,11 +7290,6 @@
     "sector": "Real Estate"
   },
   {
-    "ticker": "DBD",
-    "name": "DIEBOLD NIXDORF INC",
-    "sector": "Information Technology"
-  },
-  {
     "ticker": "PGNY",
     "name": "PROGYNY INC",
     "sector": "Health Care"
@@ -11453,11 +11448,6 @@
     "ticker": "REPL",
     "name": "REPLIMUNE GROUP INC",
     "sector": "Health Care"
-  },
-  {
-    "ticker": "XRX",
-    "name": "XEROX HOLDINGS CORP",
-    "sector": "Information Technology"
   },
   {
     "ticker": "WNC",
