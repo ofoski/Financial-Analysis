@@ -51,83 +51,74 @@ def get_10k_filings(cik):
 
 def _find_statement_files(cik_int, accession):
     """
-    Read FilingSummary.xml from the filing and return the HTML filenames for the
-    three financial statements: income statement, balance sheet, cash flow.
+    Read FilingSummary.xml and return HTML filenames for the three financial statements.
 
-    HOW THE SELECTION WORKS
-    -----------------------
-    Every 10-K filing on SEC EDGAR contains a FilingSummary.xml that lists all HTML
-    tables in that filing. Each table has a ShortName (the display label) and a
-    MenuCategory. This function scans those names and picks one file for each statement.
+    Returns a dict with:
+      "income_candidates" → list of income statement candidate filenames (in XML order)
+      "balance_sheet"     → single filename
+      "cash_flow"         → single filename
 
-    Companies use different wording for the same statement. Known examples:
+    For the income statement, multiple candidates are returned because some filings have
+    both a real income statement and a supplemental "Comprehensive Income" table with a
+    similar name. The caller checks the content of each candidate to pick the right one.
 
-    INCOME STATEMENT
-      Selected when ShortName contains: "income", "operations", or "earnings"
-        "Consolidated Statements of Operations"           → AAPL, CSCO, ADBE
-        "Consolidated Statements of Income"               → NVDA, TXN
-        "Consolidated Statements of Earnings"             → some older filings
-        "Consolidated Statements of Comprehensive Income" → PLXS, VRSN, FICO, NOW
-            Some companies combine the income statement and OCI into one table.
-            It still contains revenue and net income, so it must be selected.
-      NOT selected when ShortName contains "other comprehensive":
-        "Statements of Other Comprehensive Income"
-            This is a separate table with only currency/investment adjustments —
-            no revenue, no net income. The word "other" tells them apart.
-
-    BALANCE SHEET
-      Selected when ShortName contains: "balance" or "financial position"
-        "Consolidated Balance Sheets"                     → most companies
-        "Consolidated Statements of Financial Position"   → some companies
-      NOT selected: any name containing "parenthetical"
-        "Consolidated Balance Sheets (Parenthetical)"
-            Parenthetical tables contain footnote details, not the main numbers.
-
-    CASH FLOW STATEMENT
-      Selected when ShortName contains: "cash"
-        "Consolidated Statements of Cash Flows"           → most companies
-
-    SEARCH ORDER
-      Pass 1 — MenuCategory = "Statements" (the main financial tables)
-      Pass 2 — MenuCategory = "Uncategorized" (fallback for companies like NVDA
-                that tag their tables differently in the XML)
+    For balance sheet and cash flow, two passes are made: main financial statement tables
+    first, then uncategorized tables as a fallback (some companies tag their tables
+    differently in the XML).
     """
     url  = f"{ARCHIVES_BASE}/{cik_int}/{accession}/FilingSummary.xml"
     resp = requests.get(url, headers=HEADERS, timeout=15)
     resp.raise_for_status()
     time.sleep(0.5)
 
+    tree = ET.fromstring(resp.text)
     found = {}
+    is_candidates = []
+    seen = set()
+
+    # Only look for the income statement inside "Statements" and "Uncategorized" categories.
+    # The "Notes" category is skipped because it contains detail tables such as "Income Taxes"
+    # whose name contains the word "income" but is not the income statement.
+    _IS_CATEGORIES = {"Statements", "Uncategorized"}
+    for report in tree.iter("Report"):
+        html_file = report.findtext("HtmlFileName", "")
+        if not html_file.endswith(".htm"):
+            continue
+        if report.findtext("MenuCategory", "") not in _IS_CATEGORIES:
+            continue
+        name = report.findtext("ShortName", "").lower()
+        if "parenthetical" in name:
+            continue
+        is_income              = any(w in name for w in ("income", "operations", "earnings"))
+        is_comprehensive_only  = "other comprehensive" in name
+        if is_income and not is_comprehensive_only and html_file not in seen:
+            is_candidates.append(html_file)
+            seen.add(html_file)
+
+    # Balance sheet and cash flow: two-pass (Statements first, Uncategorized fallback)
     for categories in (("Statements",), ("Uncategorized",)):
-        for report in ET.fromstring(resp.text).iter("Report"):
+        for report in tree.iter("Report"):
             html_file = report.findtext("HtmlFileName", "")
             if not html_file.endswith(".htm"):
                 continue
             if report.findtext("MenuCategory", "") not in categories:
                 continue
-
             name = report.findtext("ShortName", "").lower()
             if "parenthetical" in name:
                 continue
-
-            is_income        = any(w in name for w in ("income", "operations", "earnings"))
-            is_comprehensive = "other comprehensive" in name
-
-            if "income_statement" not in found and is_income and not is_comprehensive:
-                found["income_statement"] = html_file
-            elif "balance_sheet" not in found and ("balance" in name or "financial position" in name):
+            if "balance_sheet" not in found and ("balance" in name or "financial position" in name):
                 found["balance_sheet"] = html_file
             elif "cash_flow" not in found and "cash" in name:
                 found["cash_flow"] = html_file
-
-        if len(found) == 3:
+        if "balance_sheet" in found and "cash_flow" in found:
             break
 
+    found["income_candidates"] = is_candidates
     return found
 
 
 def _fetch_table_text(cik_int, accession, html_file):
-    """Download one HTML R-file and return its table as pipe-separated plain text."""
+    """Download one filing HTML table file from EDGAR and return its content as pipe-separated plain text."""
     url  = f"{ARCHIVES_BASE}/{cik_int}/{accession}/{html_file}"
     resp = requests.get(url, headers=HEADERS, timeout=15)
     resp.raise_for_status()
@@ -147,9 +138,42 @@ def _fetch_table_text(cik_int, accession, html_file):
 
 
 def fetch_filing_tables(cik_int, accession):
-    """Return the three financial statement tables for one 10-K filing as plain text."""
+    """
+    Fetch the income statement, balance sheet, and cash flow tables for one 10-K filing.
+    For the income statement, multiple candidates are checked by content to pick the correct one.
+    For balance sheet and cash flow, the file is fetched directly by name.
+    Returns a dict with keys: income_statement, balance_sheet, cash_flow.
+    """
     files = _find_statement_files(cik_int, accession)
     if not files:
         raise ValueError("No financial statements found in FilingSummary.xml")
 
-    return {key: _fetch_table_text(cik_int, accession, html_file) for key, html_file in files.items()}
+    result = {}
+
+    # ── Step 1: Income statement ──────────────────────────────────────────────
+    # Unlike balance sheet and cash flow, the income statement requires content validation
+    # because multiple tables can share "income" in the name. The real income statement
+    # and the supplemental "Comprehensive Income" table (which only contains currency and
+    # pension adjustments, not revenue) both match by name. So we download each candidate
+    # and check the actual content for revenue or cost keywords to identify the correct one.
+    # If no candidate passes the check (very rare), use the first one as a last resort.
+    _IS_KEYWORDS = ("revenue", "net sales", "sales", "cost of")
+    candidates = files.pop("income_candidates", [])
+    fallback = None
+    for html_file in candidates:
+        text = _fetch_table_text(cik_int, accession, html_file)
+        if fallback is None:
+            fallback = text
+        if any(kw in text.lower() for kw in _IS_KEYWORDS):
+            result["income_statement"] = text
+            break
+    if "income_statement" not in result:
+        result["income_statement"] = fallback or "(not available)"
+
+    # ── Step 2: Balance sheet and cash flow ──────────────────────────────────
+    # These are fetched directly — their names are unique enough that no content
+    # validation is needed.
+    for key, html_file in files.items():
+        result[key] = _fetch_table_text(cik_int, accession, html_file)
+
+    return result
