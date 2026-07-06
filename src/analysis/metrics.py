@@ -21,7 +21,7 @@ def compute_metrics(df):
     # Revenue growth: year-over-year % change within each ticker
     df["revenue_growth"] = (
         df.groupby("ticker")["revenue"]
-        .pct_change()
+        .pct_change(fill_method=None)
         .round(4)
     )
 
@@ -54,7 +54,7 @@ def compute_metrics(df):
 def save_metrics(db_path, df):
     """Write the metrics table to the database, replacing any previous run."""
     with sqlite3.connect(db_path) as conn:
-        conn.execute("DROP VIEW IF EXISTS metrics")
+        conn.execute("DROP TABLE IF EXISTS metrics")
         df.to_sql("metrics", conn, if_exists="replace", index=False)
 
 
@@ -63,3 +63,8 @@ def create_metrics_table(db_path):
     df = load_data(db_path)
     df = compute_metrics(df)
     save_metrics(db_path, df)
+
+
+if __name__ == "__main__":
+    from pathlib import Path
+    create_metrics_table(Path("data/financials.db"))

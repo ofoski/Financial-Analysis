@@ -19,7 +19,7 @@ def compute_valuations(df):
     df = df.copy()
 
     # Revenue growth per ticker — needed for PEG Fair Value
-    df["revenue_growth"] = df.groupby("ticker")["revenue"].pct_change()
+    df["revenue_growth"] = df.groupby("ticker")["revenue"].pct_change(fill_method=None)
 
     # ── Graham Number ──────────────────────────────────────────────────────────
     # Maximum fair price = sqrt(22.5 × EPS × Book Value per Share)
@@ -73,7 +73,7 @@ def compute_valuations(df):
 def save_valuations(db_path, df):
     """Write the valuations table to the database, replacing any previous run."""
     with sqlite3.connect(db_path) as conn:
-        conn.execute("DROP VIEW IF EXISTS valuations")
+        conn.execute("DROP TABLE IF EXISTS valuations")
         df.to_sql("valuations", conn, if_exists="replace", index=False)
 
 
@@ -82,3 +82,8 @@ def create_valuation_table(db_path):
     df = load_data(db_path)
     df = compute_valuations(df)
     save_valuations(db_path, df)
+
+
+if __name__ == "__main__":
+    from pathlib import Path
+    create_valuation_table(Path("data/financials.db"))

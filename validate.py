@@ -17,7 +17,7 @@ with sqlite3.connect(DB_PATH) as conn:
     conn.execute("DELETE FROM validation")
 
     rows = conn.execute(
-        "SELECT * FROM financial_data_annual ORDER BY ticker, fiscal_year_end"
+        "SELECT * FROM financial_data_clean ORDER BY ticker, fiscal_year_end"
     ).fetchall()
 
     failures = []
@@ -33,7 +33,7 @@ with sqlite3.connect(DB_PATH) as conn:
         # ── Accounting identities ──────────────────────────────────────────────
 
         # Formula: Revenue - Cost of Revenue = Gross Profit (tolerance ±0.5%)
-        if all(row[c] is not None for c in ["revenue", "cost_of_revenue", "gross_profit"]):
+        if all(row[c] is not None for c in ["revenue", "cost_of_revenue", "gross_profit"]) and row["revenue"] != 0:
             pct = abs(row["revenue"] - row["cost_of_revenue"] - row["gross_profit"]) / abs(row["revenue"])
             if pct > 0.005:
                 fail("gross_identity", f"revenue {row['revenue']} - cost_of_revenue {row['cost_of_revenue']} != gross_profit {row['gross_profit']} (diff {pct:.1%})")
