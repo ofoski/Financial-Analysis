@@ -22,14 +22,17 @@ def get_cik_map():
 
 
 def _parse_10k_filings(block, results):
-    """Extract 10-K accession numbers and period dates from a submissions block."""
-    for form, accession, period in zip(block.get("form", []), block.get("accessionNumber", []), block.get("reportDate", [])):
+    """Extract 10-K accession numbers, period dates, and filing dates from a submissions block."""
+    for form, accession, period, filed in zip(
+        block.get("form", []), block.get("accessionNumber", []),
+        block.get("reportDate", []), block.get("filingDate", [])
+    ):
         if form == "10-K" and period:
-            results.append((accession.replace("-", ""), period))
+            results.append((accession.replace("-", ""), period, filed))
 
 
 def get_10k_filings(cik):
-    """Return all 10-K filings for a company as [(accession, period_end), ...], newest first."""
+    """Return all 10-K filings for a company as [(accession, period_end, filing_date), ...], newest first."""
     resp = requests.get(SUBMISSIONS_URL.format(cik), headers=HEADERS, timeout=15)
     resp.raise_for_status()
     time.sleep(0.5)

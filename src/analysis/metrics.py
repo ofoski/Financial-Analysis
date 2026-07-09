@@ -4,12 +4,12 @@ import pandas as pd
 
 
 def load_data(db_path):
-    """Load annual financials joined with prices from the database."""
+    """Load annual financials joined with prices at fiscal year end and at filing date."""
     with sqlite3.connect(db_path) as conn:
         return pd.read_sql("""
-            SELECT f.*, p.price
+            SELECT f.*, p.price, p.price_at_filing
             FROM financial_data_clean f
-            LEFT JOIN prices p ON f.ticker = p.ticker AND f.fiscal_year_end = p.date
+            LEFT JOIN prices p ON f.ticker = p.ticker AND f.fiscal_year_end = p.fiscal_year_end
             ORDER BY f.ticker, f.fiscal_year_end
         """, conn)
 
@@ -46,9 +46,9 @@ def compute_metrics(df):
     # Replace any division-by-zero infinities with NaN
     df = df.replace([np.inf, -np.inf], np.nan)
 
-    return df[["ticker", "fiscal_year_end", "revenue_growth", "gross_margin",
+    return df[["ticker", "fiscal_year_end", "filing_date", "revenue_growth", "gross_margin",
                "operating_margin", "fcf_margin", "ps_ratio", "debt_equity",
-               "roic", "rule_of_40", "price"]]
+               "roic", "rule_of_40", "price", "price_at_filing"]]
 
 
 def save_metrics(db_path, df):

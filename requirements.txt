@@ -4,3 +4,5 @@ openai
 beautifulsoup4
 yfinance
 pandas
+mcp
+prefect

@@ -2,7 +2,6 @@ import json
 import logging
 import sqlite3
 import time
-from datetime import date
 from pathlib import Path
 
 from src.collectors.edgar import get_cik_map, get_10k_filings, fetch_filing_tables
@@ -75,14 +74,13 @@ def collect_ticker(ticker, cik_entry, db_path):
     if not filings:
         raise ValueError("No 10-K filings found")
 
-    today        = date.today().isoformat()
     saved_before = _count_saved_years(db_path, ticker)
 
     # Every-2nd filing: each overlaps 1 year so the gap-year balance sheet is filled by the next filing.
     n_filings = (N_ANNUAL + 1) // 2
     selected  = filings[0::2][:n_filings]
 
-    for accession, _ in selected:
+    for accession, _, filing_date in selected:
         if _count_saved_years(db_path, ticker) >= N_ANNUAL:
             break
 
@@ -110,7 +108,7 @@ def collect_ticker(ticker, cik_entry, db_path):
                 item = year.get(var_name)
                 val  = item.get("value") if isinstance(item, dict) else item
                 data[col] = float(val) if isinstance(val, (int, float)) else None
-            save_annual(db_path, ticker, fy_end, data, collected_date=today)
+            save_annual(db_path, ticker, fy_end, data, filing_date=filing_date)
 
     _drop_incomplete(db_path, ticker)
     return _count_saved_years(db_path, ticker) - saved_before

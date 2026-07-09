@@ -54,17 +54,19 @@ def init_db(db_path):
                 ticker          TEXT NOT NULL,
                 fiscal_year_end TEXT NOT NULL,
                 {columns},
-                collected_date  TEXT,
+                filing_date     TEXT,
                 FOREIGN KEY(ticker) REFERENCES companies(ticker),
                 UNIQUE(ticker, fiscal_year_end)
             )
         """)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS prices (
-                ticker TEXT NOT NULL,
-                date   TEXT NOT NULL,
-                price  REAL,
-                PRIMARY KEY (ticker, date),
+                ticker           TEXT NOT NULL,
+                fiscal_year_end  TEXT NOT NULL,
+                price            REAL,
+                filing_date      TEXT,
+                price_at_filing  REAL,
+                PRIMARY KEY (ticker, fiscal_year_end),
                 FOREIGN KEY (ticker) REFERENCES companies(ticker)
             )
         """)
@@ -93,13 +95,13 @@ def save_company(db_path, ticker, name=None, sector=None):
         conn.commit()
 
 
-def save_annual(db_path, ticker, fiscal_year_end, data, collected_date=None):
-    cols   = list(data.keys()) + ["collected_date"]
-    vals   = list(data.values()) + [collected_date]
+def save_annual(db_path, ticker, fiscal_year_end, data, filing_date=None):
+    cols   = list(data.keys()) + ["filing_date"]
+    vals   = list(data.values()) + [filing_date]
     col_names    = ", ".join(["ticker", "fiscal_year_end"] + cols)
     placeholders = ", ".join(["?", "?"] + ["?"] * len(cols))
     updates      = ", ".join(f"{c} = COALESCE({c}, excluded.{c})" for c in data.keys())
-    updates     += ", collected_date = excluded.collected_date"
+    updates     += ", filing_date = excluded.filing_date"
 
     with sqlite3.connect(db_path) as conn:
         conn.execute(f"""
