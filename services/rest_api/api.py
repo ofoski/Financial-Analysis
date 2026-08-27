@@ -4,9 +4,8 @@ endpoint, since this only reads data, never writes it. Same data as the
 MCP server's tools, just reachable over plain HTTP for non-AI callers
 (scripts, other apps, curl) instead of through an AI agent.
 """
+from data import QUARTER_NUM, get_annual, get_quarterly
 from fastapi import FastAPI, HTTPException
-
-from data import get_annual, get_quarterly, QUARTER_NUM
 
 app = FastAPI(
     title="Financial Data API",
@@ -15,7 +14,7 @@ app = FastAPI(
 
 
 @app.get("/annual/{ticker}")
-def annual_financials(ticker: str, year: int, end_year: int = None):
+def annual_financials(ticker: str, year: int, end_year: int | None = None):
     """Real annual financials for one ticker, one row per fiscal year.
     Without end_year, returns just the one row for year.
 
@@ -28,7 +27,7 @@ def annual_financials(ticker: str, year: int, end_year: int = None):
 
 
 @app.get("/quarterly/{ticker}")
-def quarterly_financials(ticker: str, year: int, quarter: str, end_year: int = None, end_quarter: str = None):
+def quarterly_financials(ticker: str, year: int, quarter: str, end_year: int | None = None, end_quarter: str | None = None):
     """Real quarterly financials for one ticker (10-Q filings only, Q1-Q3
     each fiscal year), one row per quarter, each labeled with its real
     fiscal quarter and year (e.g. "Q2 2025"). Without end_year/end_quarter,
