@@ -8,8 +8,12 @@ total, not a standalone quarter). No LLM involved here, this only
 gathers data. See xbrl_llm_match.py for the separate step that matches
 these candidates against a variable using an LLM.
 """
-from xbrl_method import find_quarter_period, find_cumulative_period, get_10q_filings_with_doc
 from collect_statement_xbrl import collect_statement_candidates
+from xbrl_method import (
+    find_cumulative_period,
+    find_quarter_period,
+    get_10q_filings_with_doc,
+)
 
 
 def collect_quarterly_candidates(ticker, cik_int, quarter_ends=None, statements=None):

@@ -5,11 +5,10 @@ URL, not just by clients that can launch a local process.
 """
 import os
 
+from data import QUARTER_NUM, VARIABLES, get_annual, get_quarterly
 from mcp.server.fastmcp import FastMCP
 
-from data import get_annual, get_quarterly, VARIABLES, QUARTER_NUM
-
-mcp = FastMCP("financial-data", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+mcp = FastMCP("financial-data", host="0.0.0.0", port=int(os.environ.get("PORT", "8000")))
 
 MARGIN_FORMULAS = {
     "gross_margin": lambda row: _safe_divide(row["gross_profit"], row["revenue"]),
@@ -36,7 +35,7 @@ def _free_cash_flow(row):
 
 
 @mcp.tool()
-def get_annual_financials(ticker: str, year: int, end_year: int = None):
+def get_annual_financials(ticker: str, year: int, end_year: int | None = None):
     """A company's annual financials. end_year optionally extends year to
     a range; otherwise returns just the one row for year.
 
@@ -48,7 +47,7 @@ def get_annual_financials(ticker: str, year: int, end_year: int = None):
 
 
 @mcp.tool()
-def get_quarterly_financials(ticker: str, year: int, quarter: str, end_year: int = None, end_quarter: str = None):
+def get_quarterly_financials(ticker: str, year: int, quarter: str, end_year: int | None = None, end_quarter: str | None = None):
     """A company's quarterly financials. quarter and end_quarter must be
     exactly "Q1", "Q2", or "Q3" (no Q4 - annual filings cover that period
     instead). end_year/end_quarter optionally extend year/quarter to a
@@ -94,7 +93,7 @@ def compare_growth(tickers: list[str], variable: str, start_year: int, end_year:
 
 
 @mcp.tool()
-def compare_margins(tickers: list[str], margin: str, year: int, end_year: int = None):
+def compare_margins(tickers: list[str], margin: str, year: int, end_year: int | None = None):
     """One margin/ratio across companies, computed live (no market price
     involved). margin must be one of: gross_margin, operating_margin,
     net_margin, operating_cf_margin, fcf_margin, capex_ratio - each a
