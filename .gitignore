@@ -40,3 +40,6 @@ Thumbs.db
 
 # Runtime state
 progress.json
+
+# Separate git repo (a Hugging Face Space clone), not part of this repo
+hf_space/
