@@ -224,13 +224,13 @@ def find_candidate_8ks(cik_int, start_date, end_date):
         docs = [primary_doc]
         try:
             docs += [d for d in _ex99_documents(cik_int, accession) if d != primary_doc]
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
 
         for doc in docs:
             try:
                 text = fetch_8k_text(cik_int, accession, doc)
-            except Exception:
+            except Exception:  # noqa: BLE001, S112
                 continue
             if "split" in text.lower():
                 candidates.append({"accession": accession, "filed": filed, "primary_doc": doc, "text": text})

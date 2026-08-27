@@ -1,6 +1,6 @@
 """Runs when the user clicks app.py's "Check for stock split" button."""
-from split_detection import detect_splits
 from split_confirmation import confirm_split
+from split_detection import detect_splits
 
 
 def find_splits_since(ticker, cik_int, reference_quarter_end):

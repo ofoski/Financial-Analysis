@@ -131,6 +131,7 @@ def list_available_quarters(cik):
     offering them just leads to a real quarter that silently returns no
     data.
     """
+    import itertools
     import re
     from datetime import date
 
@@ -141,15 +142,15 @@ def list_available_quarters(cik):
 
     JUMP_THRESHOLD_DAYS = 140  # between one quarter (~91) and two (~182)
     groups = [[filings[0]]]
-    for newer, older in zip(filings, filings[1:]):
+    for newer, older in itertools.pairwise(filings):
         gap = (date.fromisoformat(newer[1]) - date.fromisoformat(older[1])).days
         if gap > JUMP_THRESHOLD_DAYS:
             groups.append([])
         groups[-1].append(older)
 
-    accession, quarter_end, primary_doc = filings[0]
+    accession, _quarter_end, primary_doc = filings[0]
     soup = fetch_xbrl_soup(cik_int, accession, primary_doc)
-    fy_tag = soup.find("ix:nonnumeric", {"name": re.compile("documentfiscalyearfocus", re.I)})
+    fy_tag = soup.find("ix:nonnumeric", {"name": re.compile("documentfiscalyearfocus", re.IGNORECASE)})
     anchor_year = int(fy_tag.text.strip())
 
     result = {}
