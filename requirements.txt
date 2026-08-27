@@ -1,8 +1,0 @@
-requests
-python-dotenv
-openai
-beautifulsoup4
-yfinance
-pandas
-mcp
-prefect
