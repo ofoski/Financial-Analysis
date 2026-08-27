@@ -14,10 +14,9 @@ from pathlib import Path
 
 import spaces
 import torch
+from collect_quarterly_xbrl import collect_quarterly_candidates
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-
-from collect_quarterly_xbrl import collect_quarterly_candidates
 
 MODEL_NAME = "Qwen/Qwen2.5-3B-Instruct"
 ADAPTER_PATH = Path(__file__).parent / "adapter"
@@ -194,7 +193,7 @@ def match_variables(candidates, variables_to_collect=None):
     for var in variables_to_collect:
         try:
             selected = ask_llm(candidate_labels, clear_labels[var])
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             print(f"\n  {var}: LLM call failed: {exc}")
             variables[var] = {"selected": None, "value": None}
             continue
@@ -212,4 +211,3 @@ def match_variables(candidates, variables_to_collect=None):
             }
 
     return variables
-    print(f"\nSaved {len(all_rows)} rows to {OUTPUT_PATH}")

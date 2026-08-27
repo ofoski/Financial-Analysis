@@ -7,13 +7,16 @@ Financial Data API (a static docs page for the separate REST API).
 import re
 
 import gradio as gr
-
-from edgar_helpers import get_cik_map
-from xbrl_method import list_available_quarters
-from xbrl_llm_match import VARS_BY_STATEMENT, collect_candidates_for_quarter, match_variables
 from collect_annual_xbrl import collect_annual_candidates
-from split_check import find_splits_since
+from edgar_helpers import get_cik_map
 from query_log import log_match
+from split_check import find_splits_since
+from xbrl_llm_match import (
+    VARS_BY_STATEMENT,
+    collect_candidates_for_quarter,
+    match_variables,
+)
+from xbrl_method import list_available_quarters
 
 CIK_MAP = get_cik_map()
 ALL_VARIABLES = [v for statement_vars in VARS_BY_STATEMENT.values() for v in statement_vars]

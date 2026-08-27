@@ -13,9 +13,14 @@ filings and how long a period to look for, and this file does the real
 work once, in one place.
 """
 from xbrl_method import (
-    fetch_xbrl_soup, build_context_map, build_candidates, get_report_concepts,
-    find_income_statement_report, find_balance_sheet_report, find_cash_flow_report,
+    build_candidates,
+    build_context_map,
+    fetch_xbrl_soup,
+    find_balance_sheet_report,
+    find_cash_flow_report,
+    find_income_statement_report,
     find_instant_period,
+    get_report_concepts,
 )
 
 ALL_STATEMENTS = {"income_statement", "balance_sheet", "cash_flow"}
@@ -96,7 +101,7 @@ def collect_statement_candidates(
                     build_candidates(soup, contexts, cash_flow_period[0], cash_flow_period[1], report_concepts=cash_flow_concepts)
                     if cash_flow_period else []
                 )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             print(f"\n  {ticker} {accession}: fetch failed: {exc}")
             continue
 
