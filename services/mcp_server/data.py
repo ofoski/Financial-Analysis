@@ -31,9 +31,9 @@ def get_annual(ticker, year, end_year=None):
 
     Real example: get_annual("AAPL", 2023) returns one row."""
     ticker = ticker.strip().upper()
-    cols = ", ".join(["ticker", "fiscal_year_end", "filing_date"] + VARIABLES)
+    cols = ", ".join(["ticker", "fiscal_year_end", "filing_date", *VARIABLES])
     sql = (
-        f"SELECT {cols} FROM yearly_variables "
+        f"SELECT {cols} FROM yearly_variables "  # noqa: S608
         "WHERE ticker = ? AND fiscal_year_end >= ? AND fiscal_year_end <= ? "
         "ORDER BY fiscal_year_end ASC"
     )
@@ -52,8 +52,8 @@ def get_quarterly(ticker, year, quarter, end_year=None, end_quarter=None):
     if quarter not in QUARTER_NUM or (end_quarter is not None and end_quarter not in QUARTER_NUM):
         return []
 
-    cols = ", ".join(["ticker", "quarter_end", "filing_date", "period_label"] + VARIABLES)
-    sql = f"SELECT {cols} FROM quarterly_variables WHERE ticker = ? ORDER BY quarter_end ASC"
+    cols = ", ".join(["ticker", "quarter_end", "filing_date", "period_label", *VARIABLES])
+    sql = f"SELECT {cols} FROM quarterly_variables WHERE ticker = ? ORDER BY quarter_end ASC"  # noqa: S608
     rows = _query(sql, [ticker])
 
     start_key = (year, QUARTER_NUM[quarter])
