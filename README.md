@@ -1,16 +1,26 @@
 # LLM Financial Extraction
 
-Real financial data for 187 Information Technology sector tickers (see [the 9 tracked variables](#the-9-tracked-variables)), collected from real SEC EDGAR filings. The model was trained and fine-tuned on real XBRL tags used by Information Technology companies specifically. Three separate, independently runnable pieces:
+![LLM: Qwen2.5-3B](https://img.shields.io/badge/LLM-Qwen2.5--3B-blueviolet)
+![Fine-tuning: QLoRA](https://img.shields.io/badge/fine--tuning-QLoRA-blueviolet)
+![Quantization: 4-bit](https://img.shields.io/badge/quantization-4--bit-blueviolet)
+![MCP](https://img.shields.io/badge/MCP-000000?logo=modelcontextprotocol&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![Hugging Face](https://img.shields.io/badge/Hugging%20Face-FFD21E?logo=huggingface&logoColor=black)
+![CI: lint](https://img.shields.io/github/actions/workflow/status/ofoski/Financial-Analysis/lint.yml?label=CI%3A%20lint)
+![CI: test](https://img.shields.io/github/actions/workflow/status/ofoski/Financial-Analysis/test.yml?label=CI%3A%20test)
+
+Real financial data for 187 Information Technology sector tickers (see [the 9 tracked variables](#-the-9-tracked-variables)), collected from real SEC EDGAR filings. The model was trained and fine-tuned on real XBRL tags used by Information Technology companies specifically. Three separate, independently runnable pieces:
 
 - **`deployment/`**: a Gradio app. Pick a ticker, period, and variables, and a fine-tuned Qwen2.5-3B model matches them against real XBRL line items from a live SEC filing.
 - **`services/rest_api/`**: a FastAPI REST API serving the already-collected data (`GET /annual/{ticker}`, `GET /quarterly/{ticker}`).
 - **`services/mcp_server/`**: an MCP server that lets an AI assistant query the same data and compare companies (`compare_growth`, `compare_margins`).
 
-## Try it online
+## 🌐 Try it online
 
-The LLM Extraction app is live on Hugging Face Spaces: [huggingface.co/spaces/Ofoski/financial-statement-extractor](https://huggingface.co/spaces/Ofoski/financial-statement-extractor). No setup needed, just open the link. For local testing (or to run the REST API / MCP server, which aren't deployed), see [Running locally](#running-locally) below.
+The LLM Extraction app is live on Hugging Face Spaces: [huggingface.co/spaces/Ofoski/financial-statement-extractor](https://huggingface.co/spaces/Ofoski/financial-statement-extractor). No setup needed, just open the link. For local testing (or to run the REST API / MCP server, which aren't deployed), see [Running locally](#-running-locally) below.
 
-## How it works
+## ⚙️ How it works
 
 The LLM Extraction app is the core pipeline. Given a ticker, a fiscal period, and which variables you want:
 
@@ -23,7 +33,7 @@ The LLM Extraction app is the core pipeline. Given a ticker, a fiscal period, an
 
 `services/rest_api/` and `services/mcp_server/` don't repeat this process. They read from a small, already-collected database of the same 9 variables across 187 tickers, so they answer instantly instead of fetching a live filing each time.
 
-## Project structure
+## 📁 Project structure
 
 ```
 Financial-Analysis/
@@ -61,7 +71,7 @@ Financial-Analysis/
 └── README.md
 ```
 
-## Running locally
+## 💻 Running locally
 
 Each piece has its own `Dockerfile` and runs in its own container. They don't depend on each other to run. Requires [Docker](https://www.docker.com/) installed and running.
 
@@ -91,6 +101,6 @@ Runs on port 8000. This isn't a website you open in a browser. To actually use i
 
 Claude decides on its own when to call the server, based on what you ask it. You never call it directly yourself.
 
-## The 9 tracked variables
+## 📊 The 9 tracked variables
 
 Revenue, Gross Profit, Cost of Revenue, Operating Income, Net Income, EPS Diluted, Cash, Operating CF, CapEx, collected from real 10-K (annual) and 10-Q (quarterly, Q1-Q3 only) SEC filings.
