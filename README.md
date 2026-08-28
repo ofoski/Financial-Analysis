@@ -6,6 +6,10 @@ Real financial data for 187 Information Technology sector tickers (see [the 9 tr
 - **`services/rest_api/`**: a FastAPI REST API serving the already-collected data (`GET /annual/{ticker}`, `GET /quarterly/{ticker}`).
 - **`services/mcp_server/`**: an MCP server that lets an AI assistant query the same data and compare companies (`compare_growth`, `compare_margins`).
 
+## Try it online
+
+The LLM Extraction app is live on Hugging Face Spaces: [huggingface.co/spaces/Ofoski/financial-statement-extractor](https://huggingface.co/spaces/Ofoski/financial-statement-extractor). No setup needed, just open the link. For local testing (or to run the REST API / MCP server, which aren't deployed), see [Running locally](#running-locally) below.
+
 ## How it works
 
 The LLM Extraction app is the core pipeline. Given a ticker, a fiscal period, and which variables you want:
