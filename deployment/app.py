@@ -15,7 +15,6 @@ from xbrl_llm_match import (
     collect_candidates_for_quarter,
     match_variables,
 )
-
 from xbrl_method import list_available_quarters
 
 CIK_MAP = get_cik_map()

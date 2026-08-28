@@ -9,7 +9,6 @@ gathers data. See xbrl_llm_match.py for the separate step that matches
 these candidates against a variable using an LLM.
 """
 from collect_statement_xbrl import collect_statement_candidates
-
 from xbrl_method import (
     find_cumulative_period,
     find_quarter_period,

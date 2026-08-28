@@ -5,9 +5,8 @@ URL, not just by clients that can launch a local process.
 """
 import os
 
-from mcp.server.fastmcp import FastMCP
-
 from data import QUARTER_NUM, VARIABLES, get_annual, get_quarterly
+from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("financial-data", host="0.0.0.0", port=int(os.environ.get("PORT", "8000")))  # noqa: S104
 

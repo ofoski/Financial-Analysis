@@ -4,9 +4,8 @@ endpoint, since this only reads data, never writes it. Same data as the
 MCP server's tools, just reachable over plain HTTP for non-AI callers
 (scripts, other apps, curl) instead of through an AI agent.
 """
-from fastapi import FastAPI, HTTPException
-
 from data import QUARTER_NUM, get_annual, get_quarterly
+from fastapi import FastAPI, HTTPException
 
 app = FastAPI(
     title="Financial Data API",
