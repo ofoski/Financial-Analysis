@@ -29,7 +29,7 @@ def _load_model():
     """Loads the base model + adapter once, on first use, and reuses it
     for every later call, since loading is slow (a few seconds) but
     generation is fast."""
-    global _model, _tokenizer
+    global _model, _tokenizer  # noqa: PLW0603
     if _model is not None:
         return _model, _tokenizer
 

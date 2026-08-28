@@ -1,10 +1,12 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
 beautifulsoup4
 peft
 transformers
-torch
+torch==2.5.1
 gradio
 pandas
 requests
 bitsandbytes
+kernels
 accelerate
 spaces

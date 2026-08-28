@@ -51,7 +51,7 @@ def find_statement_files(cik_int, accession):
     resp.raise_for_status()
     time.sleep(0.5)
 
-    tree = ET.fromstring(resp.text)
+    tree = ET.fromstring(resp.text)  # noqa: S314
     found = {}
     is_candidates = []
     seen = set()

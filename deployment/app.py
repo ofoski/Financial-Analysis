@@ -1,8 +1,7 @@
-"""Two-tab app: LLM Extraction (ticker -> year -> quarter -> which
-variables, then collects the real candidate lists for exactly the
-statements those variables need, and asks the fine-tuned model to
-resolve each variable's actual value from those candidates) and
-Financial Data API (a static docs page for the separate REST API).
+"""LLM Extraction app: ticker -> year -> quarter -> which variables,
+then collects the real candidate lists for exactly the statements those
+variables need, and asks the fine-tuned model to resolve each
+variable's actual value from those candidates.
 """
 import re
 
@@ -16,6 +15,7 @@ from xbrl_llm_match import (
     collect_candidates_for_quarter,
     match_variables,
 )
+
 from xbrl_method import list_available_quarters
 
 CIK_MAP = get_cik_map()
@@ -192,97 +192,7 @@ with gr.Blocks(title="Quarter Selector Demo") as extraction_demo:
         check_split, inputs=split_state, outputs=split_output,
     )
 
-API_URL = "http://127.0.0.1:8001"
-
-PYTHON_EXAMPLE = f'''import requests
-import pandas as pd
-
-BASE_URL = "{API_URL}"
-
-# Annual financials for one ticker, a range of fiscal years
-resp = requests.get(f"{{BASE_URL}}/annual/AAPL", params={{"year": 2023, "end_year": 2024}})
-annual_df = pd.DataFrame(resp.json())
-
-# Just one fiscal year (omit end_year)
-resp = requests.get(f"{{BASE_URL}}/annual/AAPL", params={{"year": 2023}})
-annual_df = pd.DataFrame(resp.json())
-
-# Quarterly financials (10-Q filings only), a range of real fiscal quarters
-resp = requests.get(f"{{BASE_URL}}/quarterly/AAPL", params={{"year": 2025, "quarter": "Q1", "end_year": 2025, "end_quarter": "Q3"}})
-quarterly_df = pd.DataFrame(resp.json())
-
-# Just one quarter (omit end_year/end_quarter)
-resp = requests.get(f"{{BASE_URL}}/quarterly/AAPL", params={{"year": 2025, "quarter": "Q1"}})
-quarterly_df = pd.DataFrame(resp.json())
-'''
-
-CURL_EXAMPLE = f'''curl "{API_URL}/annual/AAPL?year=2023&end_year=2024"
-
-curl "{API_URL}/quarterly/AAPL?year=2025&quarter=Q1&end_year=2025&end_quarter=Q3"'''
-
-with gr.Blocks(title="Financial Data API Docs") as data_api_docs:
-    gr.Markdown(f"""# Financial Data API
-Real annual and quarterly financials for 187 tracked tickers: Revenue, Gross Profit, Cost of Revenue, Operating Income, Net Income, EPS Diluted, Cash, Operating CF, CapEx. No authentication required, `GET` only.
-
-## Endpoints
-
-| Endpoint | Description | Example |
-|---|---|---|
-| `GET /annual/{{ticker}}` | One row per fiscal year, from 10-K filings | `/annual/AAPL?year=2023&end_year=2024` |
-| `GET /quarterly/{{ticker}}` | One row per real fiscal quarter (Q1-Q3), from 10-Q filings, each labeled e.g. `"Q2 2025"` | `/quarterly/AAPL?year=2025&quarter=Q1&end_year=2025&end_quarter=Q3` |
-
-`year` (annual) and `year`+`quarter` (quarterly) are required and identify one specific period. `end_year` (annual) and `end_year`+`end_quarter` (quarterly) are optional - add them to get a range instead of just that one period.
-
-## Python
-
-```python
-{PYTHON_EXAMPLE}
-```
-
-## curl
-
-```bash
-{CURL_EXAMPLE}
-```
-
-## Interactive docs
-
-Every endpoint is also browsable and testable at [{API_URL}/docs]({API_URL}/docs), auto-generated from the API itself.
-""")
-
-MCP_URL = "https://<your-space>.hf.space/mcp"
-
-with gr.Blocks(title="MCP Docs") as mcp_docs:
-    gr.Markdown(f"""# MCP (for AI Assistants)
-Same underlying data as the Financial Data API, but for connecting an AI assistant (e.g. Claude) directly, so it can answer questions conversationally instead of you writing code.
-
-## Server URL
-
-```
-{MCP_URL}
-```
-
-## How to connect
-
-On claude.ai: Settings -> Connectors -> Add custom connector -> paste the URL above. Other MCP-compatible AI clients have their own equivalent "add a server by URL" setting.
-
-## Available tools
-
-| Tool | Does |
-|---|---|
-| `get_annual_financials(ticker, year, end_year)` | One company's annual financials |
-| `get_quarterly_financials(ticker, year, quarter, end_year, end_quarter)` | One company's quarterly financials |
-| `compare_growth(tickers, variable, start_year, end_year)` | Year-over-year percent change across companies |
-| `compare_margins(tickers, margin, year, end_year)` | Gross/operating/net/operating CF/FCF margin or CapEx ratio across companies |
-
-`compare_growth` and `compare_margins` only exist here, not in the REST API - the REST API is intentionally raw data only, no formulas.
-""")
-
-demo = gr.TabbedInterface(
-    [extraction_demo, data_api_docs, mcp_docs],
-    ["LLM Extraction", "Financial Data API", "MCP"],
-    title="Financial Analysis",
-)
+demo = extraction_demo
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(footer_links=[])

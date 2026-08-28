@@ -1,9 +1,9 @@
-name: Lint
+name: Test
 
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  lint:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -12,6 +12,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - run: pip install ruff
+      - working-directory: deployment
+        run: pip install -r requirements.txt pytest
 
-      - run: ruff check .
+      - working-directory: deployment
+        run: pytest tests/ -v

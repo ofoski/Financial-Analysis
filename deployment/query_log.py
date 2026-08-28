@@ -9,7 +9,10 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-LOG_PATH = Path(__file__).parent / "match_log.jsonl"
+# /data is the persistent storage bucket mounted on the deployed Space, so
+# logs survive restarts there. Falls back to a plain local file when /data
+# doesn't exist (e.g. running locally), so this works in both places.
+LOG_PATH = Path("/data/match_log.jsonl") if Path("/data").is_dir() else Path(__file__).parent / "match_log.jsonl"
 
 
 def _already_logged(ticker, period_end, variable, candidates, selected):
