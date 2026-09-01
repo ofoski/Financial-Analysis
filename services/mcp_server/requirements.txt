@@ -1,1 +1,4 @@
 mcp<2
+requests
+beautifulsoup4
+yfinance

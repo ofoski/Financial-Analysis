@@ -1,6 +1,7 @@
 """Pipeline that turns one SEC quarterly filing (10-Q) into a candidate
-list of (label, value) pairs, for the LLM to pick a variable's value from.
-The steps run in this order:
+list of real (label, value) pairs, ready for whatever calls this to
+match against a plain-English variable like "Revenue" - no matching
+happens here. The steps run in this order:
 
 1. get_10q_filings_with_doc: list a company's filings, and which document
    to fetch for each one.
@@ -515,10 +516,11 @@ def find_instant_period(contexts, balance_sheet_date):
 
 
 def build_candidates(soup, contexts, period_start, period_end, report_concepts=None):
-    """Builds the final candidate list handed to the LLM: one (label, value)
-    pair per concept for this period. If a concept has a plain total (no
-    segment), only that total is kept, its segment breakdown is dropped, so
-    the same real dollar amount is never offered twice. A concept only
+    """Builds the final candidate list for this period: one (label, value)
+    pair per concept. If a concept has a plain total (no segment), only
+    that total is kept, its segment breakdown (product/service,
+    geographic region, etc.) is dropped, so the same real dollar amount
+    is never offered twice under near-identical labels. A concept only
     shows its segments when it has no plain total at all.
 
     Real example, CDNS's 2026 Q2 10-Q, Cost of Revenue:
@@ -528,8 +530,9 @@ def build_candidates(soup, contexts, period_start, period_end, report_concepts=N
     ("CostOfGoodsAndServicesSold (TechnologyService)", 64135000.0)
 
     Real example, AAPL's 2026 Q3 10-Q, Cost of Revenue:
-    A plain total does exist, so only that one entry appears, its
-    "(Products)"/"(Services)" segment breakdown is dropped:
+    A plain total does exist, so only that one entry appears - its
+    Product/Service split and its 5-region geographic split (both real,
+    both present in the filing) are dropped:
     ("CostOfGoodsAndServicesSold", 54647000000.0)
     """
     facts = collect_facts(soup, contexts, period_start, period_end, report_concepts=report_concepts)

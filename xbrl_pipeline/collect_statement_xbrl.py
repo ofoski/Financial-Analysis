@@ -1,8 +1,8 @@
 """For one company's real SEC filing, downloads that filing once and
 pulls out its actual financial numbers (label -> value pairs) for the
-income statement, balance sheet, and cash flow statement, ready for an
-LLM to later match against a plain-English variable like "Revenue" or
-"Cash".
+income statement, balance sheet, and cash flow statement. No matching
+against a plain-English variable like "Revenue" or "Cash" happens
+here, that's a separate step, left to whatever calls this.
 
 This is the one shared engine behind both collect_annual_xbrl.py and
 collect_quarterly_xbrl.py, since a 10-K and a 10-Q both work this exact
@@ -39,16 +39,14 @@ def collect_statement_candidates(
     each a list of real (label, value) pairs.
 
     Parameters:
-    - ticker, cik_int: the real company being asked about, coming
-      straight from what the user picked in the app.
-    - period_ends: the real date(s) the user's year/period selection
-      resolved to (e.g. {"2022-09-24"}), also from the user's action.
+    - ticker, cik_int: the real company being asked about.
+    - period_ends: the real filed date(s) being asked for (e.g.
+      {"2022-09-24"}), not a year or quarter label.
     - statements: which of the three statements to actually look up (the
-      others come back as empty lists), computed from which variables
-      the user checked, e.g. checking only "Cash" means
-      statements = {"balance_sheet"}.
+      others come back as empty lists) - a caller only asks for what it
+      actually needs, e.g. statements = {"balance_sheet"}.
     - get_filings, income_period_fn, cash_flow_period_fn, default_limit:
-      not set by the user at all, these are fixed values hardcoded by
+      not set by the caller at all, these are fixed values hardcoded by
       whichever of the two callers is invoking this function.
       collect_annual_xbrl.py always passes the 10-K filing lookup and
       find_annual_period for both periods; collect_quarterly_xbrl.py

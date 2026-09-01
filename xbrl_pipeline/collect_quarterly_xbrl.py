@@ -4,9 +4,10 @@ collect_statement_xbrl.py's shared engine, supplying the 10-Q-specific
 pieces: the 10-Q filing lookup, find_quarter_period for the income
 statement (a standalone quarter), and find_cumulative_period for cash
 flow (a 10-Q's cash flow statement only ever prints the year-to-date
-total, not a standalone quarter). No LLM involved here, this only
-gathers data. See xbrl_llm_match.py for the separate step that matches
-these candidates against a variable using an LLM.
+total, not a standalone quarter). This only gathers the raw data -
+matching a candidate against a specific variable is a separate step,
+left to whatever calls this (an LLM prompt, an MCP tool's calling
+agent, etc.).
 """
 from collect_statement_xbrl import collect_statement_candidates
 from xbrl_method import (

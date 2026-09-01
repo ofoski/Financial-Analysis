@@ -1,0 +1,28 @@
+# Both guided_app/ and services/mcp_server/ build from the repo root
+# (they need xbrl_pipeline/, a sibling folder), so exclude everything
+# else that isn't actually needed inside either image - large model/
+# data folders especially, so the build context stays small and fast
+# to send to the Docker daemon.
+
+# Virtual environments
+*venv*/
+__pycache__/
+*.pyc
+
+# Other, unrelated pieces of this repo
+deployment/
+finetune/
+hf_space/
+xbrl_method/
+api/
+data/
+config/
+logs/
+.pytest_cache/
+.git/
+.claude/
+
+# Docs, not needed at runtime
+*.docx
+README.md
+LICENSE

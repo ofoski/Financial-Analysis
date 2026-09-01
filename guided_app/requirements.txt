@@ -1,12 +1,8 @@
 --extra-index-url https://download.pytorch.org/whl/cu121
-beautifulsoup4
-peft
-transformers
 torch==2.5.1
-gradio
-pandas
-requests
+transformers
+peft
 bitsandbytes
-kernels
-accelerate
-spaces
+requests
+beautifulsoup4
+gradio

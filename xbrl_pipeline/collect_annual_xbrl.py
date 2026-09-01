@@ -3,10 +3,10 @@ lists (label -> value) for a ticker's 10-K filings. A thin wrapper around
 collect_statement_xbrl.py's shared engine, supplying the 10-K-specific
 pieces: the 10-K filing lookup, and find_annual_period for both the
 income statement and cash flow statement, since a 10-K reports both as
-one full fiscal year, not a quarterly or year-to-date figure. No LLM
-involved here, this only gathers data. See xbrl_llm_match.py for the
-separate step that matches these candidates against a variable using an
-LLM.
+one full fiscal year, not a quarterly or year-to-date figure. This only
+gathers the raw data - matching a candidate against a specific variable
+is a separate step, left to whatever calls this (an LLM prompt, an MCP
+tool's calling agent, etc.).
 """
 from collect_statement_xbrl import collect_statement_candidates
 from xbrl_method import find_annual_period, get_10k_filings_with_doc
