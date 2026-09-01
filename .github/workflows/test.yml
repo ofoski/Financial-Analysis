@@ -3,7 +3,7 @@ name: Test
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  test:
+  guided-app:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -12,8 +12,23 @@ jobs:
         with:
           python-version: "3.11"
 
-      - working-directory: deployment
+      - working-directory: guided_app
         run: pip install -r requirements.txt pytest
 
-      - working-directory: deployment
-        run: pytest tests/ -v
+      - working-directory: guided_app
+        run: python -m pytest tests/ -v
+
+  mcp-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - working-directory: services/mcp_server
+        run: pip install -r requirements.txt pytest
+
+      - working-directory: services/mcp_server
+        run: python -m pytest tests/ -v

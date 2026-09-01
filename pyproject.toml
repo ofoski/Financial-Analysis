@@ -4,4 +4,5 @@ ignore = ["RUF005"]
 
 [tool.ruff.lint.per-file-ignores]
 # assert is how pytest tests are supposed to work, not a risk here.
-"deployment/tests/*" = ["S101"]
+"guided_app/tests/*" = ["S101"]
+"services/mcp_server/tests/*" = ["S101"]
