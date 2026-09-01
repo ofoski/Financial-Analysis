@@ -8,9 +8,8 @@ value, no raw XBRL tag names. The real matched tag for each variable
 is shown separately in the details panel instead.
 """
 import gradio as gr
-
-from resolver import PER_SHARE_VARS, display_name, resolve_from_fields
 from extraction import advance, new_state
+from resolver import PER_SHARE_VARS, display_name, resolve_from_fields
 
 FIRST_QUESTION = "Which company would you like to ask about? (Example: Apple)"
 NO_DETAILS = "Ask a question to see what got extracted."
@@ -98,26 +97,26 @@ def respond(message, history, state):
         state = new_state()
 
     if not message.strip():
-        yield history + [{"role": "assistant", "content": "Type an answer first."}], state, gr.update(), ""
+        yield [*history, {"role": "assistant", "content": "Type an answer first."}], state, gr.update(), ""
         return
 
     # show the user's message and an animated thinking placeholder
     # immediately, and clear the textbox right away too, before the
     # model starts working
-    history = history + [{"role": "user", "content": message}, {"role": "assistant", "content": THINKING}]
+    history = [*history, {"role": "user", "content": message}, {"role": "assistant", "content": THINKING}]
     yield history, state, gr.update(), ""
 
     state, next_prompt = advance(state, message)
 
     if next_prompt is not None:
-        history = history[:-1] + [{"role": "assistant", "content": next_prompt}]
+        history = [*history[:-1], {"role": "assistant", "content": next_prompt}]
         yield history, state, NO_DETAILS, gr.update()
         return
 
     result = resolve_from_fields(state["ticker"], state["entry"], state["variables"], state["year"], state["quarter"])
     answer = clean_summary(result)
     answer += "\n\nClick Restart to start fresh, or just type the name of the next company."
-    history = history[:-1] + [{"role": "assistant", "content": answer}]
+    history = [*history[:-1], {"role": "assistant", "content": answer}]
     yield history, new_state(), details_panel(result, state["entry"]["name"]), gr.update()
 
 
@@ -141,4 +140,4 @@ if __name__ == "__main__":
     # container - Gradio's default (127.0.0.1) only accepts connections
     # from inside the container itself, so port mapping alone wouldn't
     # be enough without this.
-    demo.launch(theme=gr.themes.Soft(), css=TYPING_CSS, server_name="0.0.0.0")
+    demo.launch(theme=gr.themes.Soft(), css=TYPING_CSS, server_name="0.0.0.0")  # noqa: S104

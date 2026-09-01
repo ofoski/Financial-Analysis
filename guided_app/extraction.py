@@ -59,9 +59,9 @@ def _extract_year(answer):
     worked fine), so this doesn't rely on it for something this
     simple."""
     for word in answer.replace(",", " ").split():
-        word = word.strip(".!?")
-        if word.isdigit() and len(word) == 4 and 1990 <= int(word) <= 2100:
-            return int(word)
+        cleaned = word.strip(".!?")
+        if cleaned.isdigit() and len(cleaned) == 4 and 1990 <= int(cleaned) <= 2100:
+            return int(cleaned)
     return None
 
 

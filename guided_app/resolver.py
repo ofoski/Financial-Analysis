@@ -18,10 +18,11 @@ from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "xbrl_pipeline"))
-from collect_annual_xbrl import collect_annual_candidates  # noqa: E402
-from collect_quarterly_xbrl import collect_quarterly_candidates  # noqa: E402
-from edgar_helpers import get_cik_map  # noqa: E402
-from xbrl_method import list_available_quarters  # noqa: E402
+from collect_annual_xbrl import collect_annual_candidates
+from collect_quarterly_xbrl import collect_quarterly_candidates
+from edgar_helpers import get_cik_map
+
+from xbrl_method import list_available_quarters
 
 MODEL_NAME = "Qwen/Qwen2.5-3B-Instruct"
 ADAPTER_PATH = Path(__file__).parent / "adapter"

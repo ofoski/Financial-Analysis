@@ -10,10 +10,11 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "xbrl_pipeline"))
-from collect_annual_xbrl import collect_annual_candidates  # noqa: E402
-from collect_quarterly_xbrl import collect_quarterly_candidates  # noqa: E402
-from edgar_helpers import get_cik_map  # noqa: E402
-from xbrl_method import list_available_quarters  # noqa: E402
+from collect_annual_xbrl import collect_annual_candidates
+from collect_quarterly_xbrl import collect_quarterly_candidates
+from edgar_helpers import get_cik_map
+
+from xbrl_method import list_available_quarters
 
 _cik_map = None
 

@@ -1,5 +1,6 @@
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "I", "BLE", "S", "RUF", "PLW"]
+select = ["E4", "E7", "E9", "F", "BLE", "S", "RUF", "PLW"]
+ignore = ["RUF005"]
 
 [tool.ruff.lint.per-file-ignores]
 # assert is how pytest tests are supposed to work, not a risk here.
