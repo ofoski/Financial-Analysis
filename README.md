@@ -8,22 +8,26 @@
 ![CI: lint](https://img.shields.io/github/actions/workflow/status/ofoski/Financial-Analysis/lint.yml?label=CI%3A%20lint)
 ![CI: test](https://img.shields.io/github/actions/workflow/status/ofoski/Financial-Analysis/test.yml?label=CI%3A%20test)
 
-Real financial data collected from real SEC EDGAR filings. Two separate, independently runnable pieces, sharing one fetch/parse pipeline:
+Real financial data collected from real SEC EDGAR filings. Three separate, independently runnable pieces, sharing one fetch/parse pipeline and one fine-tuned model:
 
-- **`guided_app/`**: a guided chat app. Answer three short questions, company, period, and which variables, one at a time, and a fine-tuned Qwen2.5-3B model matches them against real XBRL line items from a live SEC filing.
+- **`filing_assistant/`**: a free-text chat app. Ask a normal question ("What was Apple's revenue in Q1 2025?"), and a general-purpose model reads it, then a fine-tuned Qwen2.5-3B model matches the real XBRL line items from that live SEC filing.
+- **`filing_variable_lookup/`**: the same real matching, without the chat. Pick a company, period, and variable(s) directly from dropdowns.
 - **`services/mcp_server/`**: an MCP server that lets an AI assistant fetch the same kind of real data itself, real filing periods, real statement line items, and real (split-adjusted) stock prices, and reason over it directly, no separately hosted model involved.
 
 ## ⚙️ How it works
 
-### `guided_app/`
+### `filing_assistant/`
 
-A fine-tuned Qwen2.5-3B model, hosted inside this app, is what actually reads your replies and picks out the real line items. It asks for company, then period, then which of the 9 tracked variables you want, one question at a time, and reads each short reply on its own:
+Two models, each doing a different job:
 
-1. **Company** - resolves whatever you typed to a real ticker (an exact match or a real SEC company name), or asks again if nothing matches.
-2. **Period** - pulls out a year and, if mentioned, a quarter (Q1-Q3 or FY for a full year); no quarter mentioned defaults to a full year.
-3. **Variables** - matches your reply against the 9 tracked variables directly where possible; free-form replies fall back to the fine-tuned model to pick out which ones you meant.
+1. **Extraction** (Qwen2.5-7B-Instruct, general-purpose, no fine-tuning) reads your free-text question and pulls out the company name, period, and which of the 15 tracked variables you're asking about.
+2. **Matching** (Qwen2.5-3B fine-tuned via QLoRA, `qlora_adapter/`) is shown the real candidate line items from that company's actual filing, and picks which one (or combination, if a value has to be derived from multiple lines) represents each variable.
 
-Once all three are known, it fetches the real filing for that period, and for each variable, shows the fine-tuned model the real candidate line items from that filing so it can pick which one (or combination, if a value has to be summed from multiple lines) actually represents that variable. You see the real value, and which real line item it came from.
+The company name is resolved against SEC's real, full company list (not a fixed list), and a real filing period is looked up from that company's own actual filing history before anything is matched.
+
+### `filing_variable_lookup/`
+
+Same matching step as above, but the company, period, and variable(s) are picked directly. No free-text question, no extraction model needed. The company dropdown is a filtered, cached list of real domestic 10-K/10-Q filers (companies that file Form 20-F/6-K instead, mostly foreign private issuers, are excluded, since this pipeline only reads 10-K/10-Q filings).
 
 ### `services/mcp_server/`
 
@@ -37,54 +41,66 @@ The reasoning here is done by whatever MCP-connected AI agent (like Claude) is c
 
 ```
 Financial-Analysis/
-├── guided_app/                     # Guided chat app
-│   ├── app.py                      # Gradio UI
-│   ├── extraction.py               # Reads each reply, extracts company/period/variables, drives the flow
-│   ├── resolver.py                 # Resolves a company to a real ticker; fetches and matches real filing data
-│   ├── adapter/                    # The fine-tuned LoRA adapter weights
-│   ├── Dockerfile
+├── filing_assistant/                # Free-text chat app
+│   ├── app.py                       # Gradio UI
+│   ├── extract.py                   # Reads the question, extracts company/period/variables (Qwen2.5-7B)
+│   ├── qa_backend.py                # Runs extract -> resolve -> pipeline for one question
+│   ├── resolver.py                  # Resolves a company name to a real ticker/CIK
+│   ├── pipeline.py                  # Fetches real filing data, runs the fine-tuned adapter, resolves the real value
 │   └── requirements.txt
 │
+├── filing_variable_lookup/          # Direct-selection alternative (no chat)
+│   ├── app.py                       # Gradio UI (company/period/variable dropdowns)
+│   ├── build_company_list.py        # One-time build: filters SEC's full company list to real 10-K/10-Q filers
+│   └── companies_cache.json         # That build script's cached output
+│
+├── qlora_adapter/                   # The fine-tuned model filing_assistant/filing_variable_lookup both use
+│   ├── adapter/                     # The trained LoRA adapter weights (Qwen2.5-3B base)
+│   └── prompt_format.py             # The exact prompt format the adapter was trained on
+│
 ├── services/
-│   └── mcp_server/                 # MCP server service
-│       ├── server.py               # MCP tools (list_periods, get_report, get_stock_price)
-│       ├── financial_data.py       # Business logic behind list_periods/get_report
-│       ├── stock_price.py          # Real stock price lookups (via yfinance)
+│   └── mcp_server/                  # MCP server service
+│       ├── server.py                # MCP tools (list_periods, get_report, get_stock_price)
+│       ├── financial_data.py        # Business logic behind list_periods/get_report
+│       ├── stock_price.py           # Real stock price lookups (via yfinance)
 │       ├── Dockerfile
 │       └── requirements.txt
 │
-├── xbrl_pipeline/                  # Shared by guided_app/ and services/mcp_server/
-│   ├── edgar_helpers.py            # SEC EDGAR ticker/CIK lookup
-│   ├── xbrl_method.py              # Finds/parses real SEC filings and their XBRL data
-│   ├── collect_annual_xbrl.py      # Collects candidate line items from a 10-K
-│   ├── collect_quarterly_xbrl.py   # Collects candidate line items from a 10-Q
-│   └── collect_statement_xbrl.py   # Shared engine behind the two collectors above
+├── xbrl_pipeline/                   # Shared by every piece above
+│   ├── edgar_helpers.py             # SEC EDGAR ticker/CIK lookup
+│   ├── xbrl_method.py               # Finds/parses real SEC filings and their XBRL data
+│   ├── collect_annual_xbrl.py       # Collects candidate line items from a 10-K
+│   ├── collect_quarterly_xbrl.py    # Collects candidate line items from a 10-Q
+│   └── collect_statement_xbrl.py    # Shared engine behind the two collectors above
 │
-├── .dockerignore                   # Both Dockerfiles build from the repo root, this keeps that build small
-├── .mcp.json                       # Connects Claude Code to the MCP server locally
+├── .dockerignore                    # services/mcp_server/Dockerfile builds from the repo root, this keeps that build small
+├── .mcp.json                        # Connects Claude Code to the MCP server locally
 └── README.md
 ```
 
 ## 💻 Running locally
 
-Both pieces need `xbrl_pipeline/` alongside them (they import it directly), so clone the whole repo rather than just one folder. Each has its own `requirements.txt`, they don't depend on each other to run. Either run them directly with Python, or with Docker, both `Dockerfile`s build from the **repo root** (not their own folder), since that's the only place both a piece and `xbrl_pipeline/` are both reachable.
+Every piece needs `xbrl_pipeline/` alongside it (imported directly), so clone the whole repo rather than just one folder. `filing_assistant/` and `filing_variable_lookup/` also need `qlora_adapter/` for the fine-tuned model, and `filing_variable_lookup/` needs `filing_assistant/pipeline.py` too, so install `filing_assistant/requirements.txt` for either one.
 
-**1. Guided chat app**:
+**1. Filing assistant (chat)**:
 ```bash
-# with Python
-cd guided_app
+cd filing_assistant
 python -m venv venv
 venv\Scripts\activate      # on Windows; source venv/bin/activate on macOS/Linux
 pip install -r requirements.txt
 python app.py
-
-# with Docker (run from the repo root)
-docker build -f guided_app/Dockerfile -t guided-app .
-docker run --gpus all -p 7860:7860 guided-app
 ```
-Runs on port 7860. Benefits from a GPU: the model is loaded with 4-bit quantization, which needs CUDA to run at a reasonable speed; it'll fall back to CPU otherwise, but noticeably slower. `--gpus all` passes your GPU through to the container (needs the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) set up); leave it off to run on CPU instead.
+Runs on port 7860. Benefits from a GPU: both models load with 4-bit quantization, which needs CUDA to run at a reasonable speed.
 
-**2. MCP server**:
+**2. Filing variable lookup (direct selection)**:
+```bash
+cd filing_variable_lookup
+pip install -r ../filing_assistant/requirements.txt
+python app.py
+```
+Runs on port 7863. First run downloads SEC's full company list live; `build_company_list.py` can be rerun to refresh the cached, filtered `companies_cache.json`.
+
+**3. MCP server**:
 ```bash
 # with Python
 cd services/mcp_server
@@ -101,6 +117,24 @@ Runs on port 8000 by default. This isn't a website you open in a browser. To act
 
 Claude decides on its own when to call the server, based on what you ask it. You never call it directly yourself.
 
-## 📊 The 9 tracked variables
+## 📊 The 15 tracked variables
 
-Revenue, Gross Profit, Cost of Revenue, Operating Income, Net Income, EPS Diluted, Cash, Operating CF, CapEx, collected from real 10-K (annual) and 10-Q (quarterly, Q1-Q3 only) SEC filings.
+Collected from real 10-K (annual) and 10-Q (quarterly, Q1, Q2, Q3) SEC filings. The fine-tuned adapter was trained on 6,915 real, analyst-verified examples, validated during training on a further 759, and scores **92.4% exact-match accuracy** overall on a fully held-out test set of 1,440 examples across 48 companies (2 per sector, 24 sectors) never seen during training or validation:
+
+| Variable | Accuracy |
+|---|---|
+| Total Current Assets | 100.0% |
+| Total Current Liabilities | 100.0% |
+| Cash and Cash Equivalents | 99.0% |
+| Operating Cash Flow | 99.0% |
+| Total Assets | 99.0% |
+| Total Stockholders Equity | 99.0% |
+| EPS Diluted | 94.8% |
+| Revenue | 94.8% |
+| Net Income | 92.7% |
+| Cost of Revenue | 90.6% |
+| Operating Income | 89.6% |
+| Capital Expenditures | 87.5% |
+| Gross Profit | 87.5% |
+| Total Debt | 82.3% |
+| Total Liabilities | 70.8% |

@@ -35,8 +35,8 @@ REPO_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(REPO_ROOT / "filing_assistant"))
 sys.path.insert(0, str(REPO_ROOT / "xbrl_pipeline"))
 
-import pipeline
-from edgar_helpers import get_cik_map
+import pipeline  # noqa: E402
+from edgar_helpers import get_cik_map  # noqa: E402
 
 COMPANY_CACHE_PATH = Path(__file__).parent / "companies_cache.json"
 

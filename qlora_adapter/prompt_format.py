@@ -51,7 +51,7 @@ CLEAR_LABELS = {
     "Total Debt": "Total Debt -- the company's total interest-bearing borrowings (short-term and long-term debt, and finance lease liabilities where reported as debt). This is very often reported as separate current and noncurrent (or short-term and long-term) lines that must be summed together. Exclude operating lease liabilities, accounts payable, and other non-debt obligations. If no debt is reported at all, return [].",
 }
 
-assert set(CLEAR_LABELS) == set(STATEMENT_BY_VARIABLE), "CLEAR_LABELS and STATEMENT_BY_VARIABLE must cover the same 15 variables"
+assert set(CLEAR_LABELS) == set(STATEMENT_BY_VARIABLE), "CLEAR_LABELS and STATEMENT_BY_VARIABLE must cover the same 15 variables"  # noqa: S101
 
 
 def make_json_prompt(candidates, label):

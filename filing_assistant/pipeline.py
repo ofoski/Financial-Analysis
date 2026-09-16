@@ -20,10 +20,10 @@ REPO_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(REPO_ROOT / "xbrl_pipeline"))
 sys.path.insert(0, str(REPO_ROOT / "qlora_adapter"))
 
-from collect_annual_xbrl import collect_annual_candidates
-from collect_quarterly_xbrl import collect_quarterly_candidates
-from xbrl_method import list_available_quarters
-from prompt_format import CLEAR_LABELS, STATEMENT_BY_VARIABLE, make_json_prompt
+from collect_annual_xbrl import collect_annual_candidates  # noqa: E402
+from collect_quarterly_xbrl import collect_quarterly_candidates  # noqa: E402
+from xbrl_method import list_available_quarters  # noqa: E402
+from prompt_format import CLEAR_LABELS, STATEMENT_BY_VARIABLE, make_json_prompt  # noqa: E402
 
 MODEL_NAME = "Qwen/Qwen2.5-3B-Instruct"
 ADAPTER_PATH = REPO_ROOT / "qlora_adapter" / "adapter"
