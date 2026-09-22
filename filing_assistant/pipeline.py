@@ -10,6 +10,7 @@ adapter was actually trained on).
 import json
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
 import torch
@@ -152,8 +153,12 @@ def match_variables(ticker, cik, variables, year, quarter):
     for statement, statement_variables in variables_by_statement.items():
         candidate_labels, value_for_label, period_end = get_candidates(ticker, cik, statement, year, quarter)
         if candidate_labels is None:
+            if int(year) >= date.today().year:
+                not_found_error = f"{ticker} has not filed {quarter} {year} with the SEC yet."
+            else:
+                not_found_error = f"No real filed period found for {ticker} {quarter} {year}."
             for variable in statement_variables:
-                results.append({"variable": variable, "error": f"No real filed period found for {ticker} {quarter} {year}."})
+                results.append({"variable": variable, "error": not_found_error})
             continue
 
         for variable in statement_variables:

@@ -58,7 +58,7 @@ with gr.Blocks(theme=gr.themes.Soft(primary_hue="indigo", neutral_hue="slate"), 
     gr.Markdown("# SEC Filing Assistant", elem_id="title")
     gr.Markdown("Ask about a public company's real reported financials, covering data from 2020 onward.", elem_id="subtitle")
 
-    chatbot = gr.Chatbot(layout="bubble", show_label=False, elem_id="chatbot", height=460)
+    chatbot = gr.Chatbot(layout="bubble", show_label=False, elem_id="chatbot", height=460, buttons=[])
 
     with gr.Row():
         textbox = gr.Textbox(placeholder="Ask a question...", show_label=False, scale=8, container=False, elem_id="question-box")

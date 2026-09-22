@@ -4,7 +4,7 @@ description of each variable shown to the model, and the exact prompt
 template itself.
 
 Split out from build_training_data_v2.py so that serving code (the
-Gradio apps under filing_assistant/ and filing_variable_lookup/) can
+Gradio apps under filing_assistant/ and variable_lookup/) can
 depend on just this - the format the adapter actually expects - without
 depending on the training-data-build script itself. Both
 build_training_data_v2.py and the serving apps import from here, so

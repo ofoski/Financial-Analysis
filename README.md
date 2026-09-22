@@ -11,7 +11,7 @@
 Real financial data collected from real SEC EDGAR filings. Three separate, independently runnable pieces, sharing one fetch/parse pipeline and one fine-tuned model:
 
 - **`filing_assistant/`**: a free-text chat app. Ask a normal question ("What was Apple's revenue in Q1 2025?"), and a general-purpose model reads it, then a fine-tuned Qwen2.5-3B model matches the real XBRL line items from that live SEC filing.
-- **`filing_variable_lookup/`**: the same real matching, without the chat. Pick a company, period, and variable(s) directly from dropdowns.
+- **`variable_lookup/`**: the same real matching, without the chat. Pick a company, period, and variable(s) directly from dropdowns.
 - **`services/mcp_server/`**: an MCP server that lets an AI assistant fetch the same kind of real data itself, real filing periods, real statement line items, and real (split-adjusted) stock prices, and reason over it directly, no separately hosted model involved.
 
 ## ⚙️ How it works
@@ -25,7 +25,7 @@ Two models, each doing a different job:
 
 The company name is resolved against SEC's real, full company list (not a fixed list), and a real filing period is looked up from that company's own actual filing history before anything is matched.
 
-### `filing_variable_lookup/`
+### `variable_lookup/`
 
 Same matching step as above, but the company, period, and variable(s) are picked directly. No free-text question, no extraction model needed. The company dropdown is a filtered, cached list of real domestic 10-K/10-Q filers (companies that file Form 20-F/6-K instead, mostly foreign private issuers, are excluded, since this pipeline only reads 10-K/10-Q filings).
 
@@ -49,12 +49,12 @@ Financial-Analysis/
 │   ├── pipeline.py                  # Fetches real filing data, runs the fine-tuned adapter, resolves the real value
 │   └── requirements.txt
 │
-├── filing_variable_lookup/          # Direct-selection alternative (no chat)
+├── variable_lookup/                 # Direct-selection alternative (no chat)
 │   ├── app.py                       # Gradio UI (company/period/variable dropdowns)
 │   ├── build_company_list.py        # One-time build: filters SEC's full company list to real 10-K/10-Q filers
 │   └── companies_cache.json         # That build script's cached output
 │
-├── qlora_adapter/                   # The fine-tuned model filing_assistant/filing_variable_lookup both use
+├── qlora_adapter/                   # The fine-tuned model filing_assistant/variable_lookup both use
 │   ├── adapter/                     # The trained LoRA adapter weights (Qwen2.5-3B base)
 │   └── prompt_format.py             # The exact prompt format the adapter was trained on
 │
@@ -80,7 +80,7 @@ Financial-Analysis/
 
 ## 💻 Running locally
 
-Every piece needs `xbrl_pipeline/` alongside it (imported directly), so clone the whole repo rather than just one folder. `filing_assistant/` and `filing_variable_lookup/` also need `qlora_adapter/` for the fine-tuned model, and `filing_variable_lookup/` needs `filing_assistant/pipeline.py` too, so install `filing_assistant/requirements.txt` for either one.
+Clone the whole repo.
 
 **1. Filing assistant (chat)**:
 ```bash
@@ -92,9 +92,9 @@ python app.py
 ```
 Runs on port 7860. Benefits from a GPU: both models load with 4-bit quantization, which needs CUDA to run at a reasonable speed.
 
-**2. Filing variable lookup (direct selection)**:
+**2. Variable lookup (direct selection)**:
 ```bash
-cd filing_variable_lookup
+cd variable_lookup
 pip install -r ../filing_assistant/requirements.txt
 python app.py
 ```

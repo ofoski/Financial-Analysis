@@ -1,4 +1,4 @@
-"""Builds a local, cached company list for filing_variable_lookup/app.py's
+"""Builds a local, cached company list for variable_lookup/app.py's
 dropdown, instead of it fetching SEC's full ~10,000-company list live
 on every restart.
 

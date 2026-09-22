@@ -20,6 +20,7 @@ import json
 import sys
 import threading
 import time
+from datetime import date
 from pathlib import Path
 
 import gradio as gr
@@ -52,7 +53,10 @@ VARIABLES = [
 # rejected after the fact.
 PERIODS = ["FY", "Q1", "Q2", "Q3"]
 
-YEARS = [str(y) for y in range(2025, 2019, -1)]  # 2025 down to 2020
+EARLIEST_YEAR = 2020  # xbrl_pipeline drops filings before this
+# +1 covers fiscal years labeled ahead of the calendar year
+CURRENT_YEAR = date.today().year
+YEARS = [str(y) for y in range(CURRENT_YEAR + 1, EARLIEST_YEAR - 1, -1)]
 
 
 def load_companies():
