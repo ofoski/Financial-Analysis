@@ -33,14 +33,39 @@ from bs4 import BeautifulSoup
 HEADERS = {"User-Agent": "Research research@example.com"}
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{}.json"
 
+# Real filings never change once filed under a given accession number, and
+# a company's own filing list doesn't change within one process's
+# lifetime - caching both here means every caller (list_available_quarters
+# below, and anything that calls get_report for more than one statement
+# off the same filing) never re-downloads something already fetched, with
+# no risk of stale data since what's cached is immutable by nature.
+_soup_cache = {}
+_10q_list_cache = {}
+_10k_list_cache = {}
+
 
 def fetch_xbrl_soup(cik_int, accession_nodash, main_htm_filename):
     """Downloads one filing's document and parses it into a searchable
-    structure, so later code can search its tags instead of raw HTML."""
+    structure, so later code can search its tags instead of raw HTML.
+    Retries once on a dropped connection - real, transient network
+    errors happen more often now that list_available_quarters downloads
+    every filing instead of just one, so a single flaky request
+    shouldn't fail a whole real lookup."""
+    cache_key = (cik_int, accession_nodash, main_htm_filename)
+    if cache_key in _soup_cache:
+        return _soup_cache[cache_key]
     url = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{accession_nodash}/{main_htm_filename}"
-    resp = requests.get(url, headers=HEADERS, timeout=30)
-    resp.raise_for_status()
-    return BeautifulSoup(resp.text, "html.parser")
+    for attempt in range(3):
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=30)
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.text, "html.parser")
+            _soup_cache[cache_key] = soup
+            return soup
+        except requests.exceptions.RequestException:
+            if attempt == 2:
+                raise
+            time.sleep(1)
 
 
 def _parse_10q_entries(block, results):
@@ -52,9 +77,26 @@ def _parse_10q_entries(block, results):
             results.append((accession.replace("-", ""), period, primary_doc))
 
 
-def get_10q_filings_with_doc(cik):
+def get_10q_filings_with_doc(cik, min_year=None):
     """Gets the company's quarterly filings (10-Qs): for each one, the
-    period it covers and the document needed to fetch its data."""
+    period it covers and the document needed to fetch its data.
+
+    min_year: optional. When given, keeps paging through older
+    submission archives until a 10-Q reaching back to that year is
+    found, instead of stopping once a fixed count of 5 is collected.
+    Real testing found the fixed count fails for high-filing-volume
+    issuers - large banks especially, which also file large numbers of
+    registration statements and other unrelated forms - since their
+    real 10-Qs end up diluted far enough into the archive that 5 of
+    them doesn't reach back to a target year at all (JPMorgan Chase
+    has 70 paginated submission pages; most companies have 1-3).
+    Left as None (stop once 5 are found, the original, unchanged
+    behavior) for any caller that doesn't know - or doesn't need - one
+    specific year."""
+    cache_key = (cik, min_year)
+    if cache_key in _10q_list_cache:
+        return _10q_list_cache[cache_key]
+
     resp = requests.get(SUBMISSIONS_URL.format(cik), headers=HEADERS, timeout=15)
     resp.raise_for_status()
     time.sleep(0.5)
@@ -64,13 +106,17 @@ def get_10q_filings_with_doc(cik):
     _parse_10q_entries(filings.get("recent", {}), results)
 
     for file_entry in filings.get("files", []):
-        if len(results) >= 5:
+        if min_year is not None:
+            if results and min(r[1] for r in results) < f"{min_year}-01-01":
+                break
+        elif len(results) >= 5:
             break
         r = requests.get("https://data.sec.gov/submissions/" + file_entry["name"], headers=HEADERS, timeout=15)
         r.raise_for_status()
         time.sleep(0.5)
         _parse_10q_entries(r.json(), results)
 
+    _10q_list_cache[cache_key] = results
     return results
 
 
@@ -90,6 +136,10 @@ def get_10k_filings_with_doc(cik, min_year=None):
     get_10q_filings_with_doc, this keeps paging through every older
     submissions page until min_year is covered (or there are no more
     pages), rather than stopping after a fixed filing count."""
+    cache_key = (cik, min_year)
+    if cache_key in _10k_list_cache:
+        return _10k_list_cache[cache_key]
+
     resp = requests.get(SUBMISSIONS_URL.format(cik), headers=HEADERS, timeout=15)
     resp.raise_for_status()
     time.sleep(0.5)
@@ -106,81 +156,101 @@ def get_10k_filings_with_doc(cik, min_year=None):
         time.sleep(0.5)
         _parse_10k_entries(r.json(), results)
 
+    _10k_list_cache[cache_key] = results
     return results
 
 
-def list_available_quarters(cik):
-    """Groups a company's real 10-Q dates into fiscal-year groups without
-    downloading every filing. A normal gap between two consecutive
-    quarter_end dates is about 91 days (one quarter). A gap of about 182
-    days means a fiscal year's Q4 (a 10-K, not a 10-Q) fell in between,
-    that gap marks a real fiscal-year boundary, so the filing right after
-    it starts a new fiscal year at Q1. Within each boundary-to-boundary
-    group, chronological order is always Q1, Q2, Q3.
+def _real_fiscal_labels(soup):
+    """Reads a filing's own real, company-declared fiscal year and
+    period (Q1/Q2/Q3/FY) directly from its dei: tags - this is the
+    company itself stating which fiscal year and quarter this filing
+    covers, not an inference from filing dates."""
+    import re
 
-    That handles the quarter label for free. The fiscal YEAR number still
-    needs one real anchor, since it depends on each company's own fiscal
-    year-end month, not on calendar dates alone, e.g. NVDA's group
-    [2025-04-27, 2025-07-27, 2025-10-26] is real fiscal year "2026", not
-    "2025", even though every date in it is calendar year 2025. So this
-    downloads exactly one filing, the single most recent one, and reads
-    its real dei:DocumentFiscalYearFocus. Every older group is then just
-    that number minus 1 per boundary crossed, no more downloads needed.
+    year_tag = soup.find("ix:nonnumeric", {"name": re.compile("documentfiscalyearfocus", re.IGNORECASE)})
+    period_tag = soup.find("ix:nonnumeric", {"name": re.compile("documentfiscalperiodfocus", re.IGNORECASE)})
+    year = year_tag.text.strip() if year_tag else None
+    period = period_tag.text.strip().upper() if period_tag else None
+    return year, period
+
+
+def list_available_quarters(cik, target_year=None):
+    """Groups a company's real 10-Q/10-K filings by their own real,
+    company-declared fiscal year and period label, read directly from
+    each filing's dei:DocumentFiscalYearFocus / dei:DocumentFiscalPeriodFocus
+    tags.
+
+    This used to be inferred instead, from gaps between filing dates
+    (a ~91-day gap is one quarter, a ~182-day gap means a 10-K fell in
+    between) plus one real anchor filing for the fiscal year number.
+    That worked for the large majority of companies, but real testing
+    found genuine mismatches for companies with an irregular filing
+    history (a late or restated filing, a short first fiscal year right
+    after an IPO), since gap-counting assumes a fairly regular filing
+    schedule. Reading each filing's own declared label instead has no
+    such assumption - it's real, directly authoritative data, at the
+    cost of one real download per filing instead of just one total.
 
     Years before 2020 are dropped from the result, older filings don't
     reliably use the XBRL structure the collection step depends on, so
     offering them just leads to a real quarter that silently returns no
     data.
+
+    target_year: optional. When given, only opens filings whose real
+    reportDate is within one year of it (e.g. target_year=2024 checks
+    2023-01-01 through 2025-12-31) instead of every filing since 2020 -
+    confirmed directly this is wide enough to still catch a real case
+    like Apple's fiscal Q1 2024, whose real period-end date is
+    2023-12-30. Left as None (open every filing, the original,
+    unchanged behavior) for any caller that doesn't know - or doesn't
+    need - one specific year, so nothing that calls this without a year
+    changes behavior at all.
+
+    Rare real case: a company can genuinely file two different real
+    filings that both declare the same fiscal year and period label
+    (e.g. a fiscal year-end change producing an overlapping transition
+    filing). When that happens, the value for that slot becomes a list
+    of the real conflicting dates instead of a single date string, so
+    this doesn't silently keep one and drop the other - whatever calls
+    this should ask the user which real date they meant.
     """
-    import itertools
-    import re
-    from datetime import date
-
     cik_int = int(cik)
-    filings = get_10q_filings_with_doc(cik)
-    if not filings:
-        return {}
-
-    JUMP_THRESHOLD_DAYS = 140  # between one quarter (~91) and two (~182)
-    groups = [[filings[0]]]
-    for newer, older in itertools.pairwise(filings):
-        gap = (date.fromisoformat(newer[1]) - date.fromisoformat(older[1])).days
-        if gap > JUMP_THRESHOLD_DAYS:
-            groups.append([])
-        groups[-1].append(older)
-
-    accession, _quarter_end, primary_doc = filings[0]
-    soup = fetch_xbrl_soup(cik_int, accession, primary_doc)
-    fy_tag = soup.find("ix:nonnumeric", {"name": re.compile("documentfiscalyearfocus", re.IGNORECASE)})
-    anchor_year = int(fy_tag.text.strip())
-
     result = {}
-    for i, group in enumerate(groups):
-        year = anchor_year - i
-        if year < 2020:
-            continue
-        chronological = list(reversed(group))
-        labels = ["Q1", "Q2", "Q3"][:len(chronological)]
-        result[str(year)] = {label: qend for label, (_, qend, _) in zip(labels, chronological)}
+    lo = f"{int(target_year) - 1}-01-01" if target_year is not None else None
+    hi = f"{int(target_year) + 1}-12-31" if target_year is not None else None
 
-    # A 10-K's fiscal_year_end normally falls about one quarter (~91 days)
-    # after that same fiscal year's Q3 end date, so it can be matched to
-    # the right year using dates already on hand, no extra document
-    # fetch needed (unlike the anchor lookup above, which genuinely does
-    # need one real document to read a company's fiscal year number).
-    oldest_year = min(int(y) for y in result)
-    for accession, fiscal_year_end, primary_doc in get_10k_filings_with_doc(cik, min_year=oldest_year):
-        fy_end_date = date.fromisoformat(fiscal_year_end)
-        best_year, best_gap = None, None
-        for year, periods in result.items():
-            q3 = periods.get("Q3")
-            if not q3:
-                continue
-            gap = (fy_end_date - date.fromisoformat(q3)).days
-            if 60 <= gap <= 120 and (best_gap is None or gap < best_gap):
-                best_year, best_gap = year, gap
-        if best_year:
-            result[best_year]["FY"] = fiscal_year_end
+    def _set(year, period, period_end):
+        bucket = result.setdefault(year, {})
+        existing = bucket.get(period)
+        if existing is None:
+            bucket[period] = period_end
+        elif isinstance(existing, list):
+            if period_end not in existing:
+                existing.append(period_end)
+        elif existing != period_end:
+            bucket[period] = [existing, period_end]
+
+    quarterly_min_year = int(target_year) - 1 if target_year is not None else None
+    for accession, period_end, primary_doc in get_10q_filings_with_doc(cik, min_year=quarterly_min_year):
+        if lo is not None and not (lo <= period_end <= hi):
+            continue
+        soup = fetch_xbrl_soup(cik_int, accession, primary_doc)
+        time.sleep(0.3)
+        year, period = _real_fiscal_labels(soup)
+        if not year or not period or int(year) < 2020:
+            continue
+        _set(year, period, period_end)
+
+    oldest_year = min((int(y) for y in result), default=2020) if target_year is None else int(target_year) - 1
+    for accession, period_end, primary_doc in get_10k_filings_with_doc(cik, min_year=oldest_year):
+        if lo is not None and not (lo <= period_end <= hi):
+            continue
+        soup = fetch_xbrl_soup(cik_int, accession, primary_doc)
+        time.sleep(0.3)
+        year, _period = _real_fiscal_labels(soup)
+        if not year or int(year) < 2020:
+            continue
+        _set(year, "FY", period_end)
 
     return result
 
@@ -393,8 +463,13 @@ def find_cash_flow_report(cik_int, accession_nodash):
 # Real quarters vary a bit in length, so _closest_period accepts anything
 # within PERIOD_TOLERANCE_DAYS days of a whole multiple of QUARTER_DAYS,
 # e.g. 81-101 days counts as one quarter, 263-283 days counts as three.
+# Tolerance has to be wide enough to also cover 52/53-week fiscal
+# calendars (PepsiCo, among others), where each quarter is a 12-week,
+# 84-day period rather than a calendar quarter - by three quarters that's
+# 21 days short of 3 * QUARTER_DAYS, e.g. PepsiCo's real Q3 2024
+# year-to-date period is 251 days, not ~273.
 QUARTER_DAYS = 91
-PERIOD_TOLERANCE_DAYS = 10
+PERIOD_TOLERANCE_DAYS = 25
 
 
 def _real_periods(soup, contexts, quarter_end, report_concepts):
