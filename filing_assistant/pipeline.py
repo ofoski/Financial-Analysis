@@ -13,6 +13,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
+import requests
 import torch
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
@@ -114,9 +115,13 @@ def get_candidates(ticker, cik, statement, year, quarter):
         return None, None, None
 
     if quarter == "FY":
-        rows = collect_annual_candidates(ticker, cik_int, fiscal_year_ends={period_end}, statements={statement})
+        rows = collect_annual_candidates(
+            ticker, cik_int, fiscal_year_ends={period_end}, statements={statement}, raise_on_error=True,
+        )
     else:
-        rows = collect_quarterly_candidates(ticker, cik_int, quarter_ends={period_end}, statements={statement})
+        rows = collect_quarterly_candidates(
+            ticker, cik_int, quarter_ends={period_end}, statements={statement}, raise_on_error=True,
+        )
 
     candidates = rows[0][statement] if rows else []
     value_for_label = dict(candidates)
@@ -129,8 +134,13 @@ def match_variables(ticker, cik, variables, year, quarter):
     it) and runs the adapter to pick the matching tag(s).
 
     Returns a list of dicts, one per variable:
-      {"variable", "selected", "value", "period_end"} on success
-      {"variable", "error"} if no real data/period/match was found
+      {"variable", "selected", "value", "period_end"} on success (value
+        is None when the model's answer is empty, unreadable, or names
+        a label that isn't in the candidates)
+      {"variable", "error", "scope"} if the whole period ("period") or
+        the variable's whole statement ("statement", with "statement"
+        set) had a problem. result_lines() writes those once, not once
+        per variable.
     """
     if quarter == "Q4":
         # SEC has no standalone Q4 filing - only the three 10-Qs (Q1-Q3)
@@ -140,7 +150,10 @@ def match_variables(ticker, cik, variables, year, quarter):
         # for a flow variable (Revenue, Net Income, ...), since FY is
         # ~4 quarters' worth, not just Q4's.
         return [
-            {"variable": variable, "error": "There is no standalone Q4 filing. Q4's period end date is the same as the fiscal year end."}
+            {
+                "variable": variable, "scope": "period",
+                "error": "There is no standalone Q4 filing. Q4's period end date is the same as the fiscal year end.",
+            }
             for variable in variables
         ]
 
@@ -151,28 +164,59 @@ def match_variables(ticker, cik, variables, year, quarter):
 
     results = []
     for statement, statement_variables in variables_by_statement.items():
-        candidate_labels, value_for_label, period_end = get_candidates(ticker, cik, statement, year, quarter)
+        try:
+            candidate_labels, value_for_label, period_end = get_candidates(ticker, cik, statement, year, quarter)
+        except requests.exceptions.RequestException:
+            for variable in statement_variables:
+                results.append({
+                    "variable": variable, "scope": "statement", "statement": statement,
+                    "error": "SEC didn't respond, please try again.",
+                })
+            continue
         if candidate_labels is None:
             if int(year) >= date.today().year:
                 not_found_error = f"{ticker} has not filed {quarter} {year} with the SEC yet."
             else:
                 not_found_error = f"No real filed period found for {ticker} {quarter} {year}."
             for variable in statement_variables:
-                results.append({"variable": variable, "error": not_found_error})
+                results.append({"variable": variable, "scope": "period", "error": not_found_error})
             continue
 
         for variable in statement_variables:
             if not candidate_labels:
-                results.append({"variable": variable, "error": "No real filing data found for this statement."})
+                results.append({
+                    "variable": variable, "scope": "statement", "statement": statement,
+                    "error": "No real filing data found.",
+                })
                 continue
             prompt = make_json_prompt(candidate_labels, CLEAR_LABELS[variable])
-            selected = _generate_json(prompt)
-            if selected is None:
-                results.append({"variable": variable, "error": "Model couldn't produce a valid match."})
-                continue
+            selected = _generate_json(prompt) or []
             value = resolve_value(selected, value_for_label)
             results.append({
                 "variable": variable, "selected": selected, "value": value, "period_end": period_end,
             })
 
     return results
+
+
+def result_lines(results, format_value):
+    """Turns match_variables' results into display lines. A problem
+    covering the whole period or a whole statement is written once, not
+    once per variable."""
+    lines = []
+    seen = set()
+    for r in results:
+        scope = r.get("scope")
+        if scope == "period":
+            key, line = ("period", r["error"]), r["error"]
+        elif scope == "statement":
+            label = r["statement"].replace("_", " ").capitalize()
+            key, line = (r["statement"], r["error"]), f"{label}: {r['error']}"
+        else:
+            key, line = None, f"{r['variable']}: {format_value(r['value'], r['variable'])}"
+        if key is not None:
+            if key in seen:
+                continue
+            seen.add(key)
+        lines.append(line)
+    return lines

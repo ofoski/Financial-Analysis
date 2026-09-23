@@ -12,7 +12,7 @@ from collect_statement_xbrl import collect_statement_candidates
 from xbrl_method import find_annual_period, get_10k_filings_with_doc
 
 
-def collect_annual_candidates(ticker, cik_int, fiscal_year_ends=None, statements=None):
+def collect_annual_candidates(ticker, cik_int, fiscal_year_ends=None, statements=None, raise_on_error=False):
     """Returns one row per 10-K filing: {ticker, period_end,
     income_statement, balance_sheet, cash_flow}. fiscal_year_ends and
     statements are passed straight through to collect_statement_candidates,
@@ -22,5 +22,5 @@ def collect_annual_candidates(ticker, cik_int, fiscal_year_ends=None, statements
         ticker, cik_int,
         get_filings=lambda cik: get_10k_filings_with_doc(str(cik).zfill(10), min_year=min_year),
         income_period_fn=find_annual_period, cash_flow_period_fn=find_annual_period,
-        period_ends=fiscal_year_ends, statements=statements,
+        period_ends=fiscal_year_ends, statements=statements, raise_on_error=raise_on_error,
     )

@@ -82,6 +82,8 @@ Financial-Analysis/
 
 Clone the whole repo.
 
+Before running anything, open `xbrl_pipeline/edgar_helpers.py` and replace the placeholder `HEADERS` User-Agent with your own name and email. SEC asks every program that downloads from EDGAR to identify itself this way.
+
 **1. Filing assistant (chat)**:
 ```bash
 cd filing_assistant

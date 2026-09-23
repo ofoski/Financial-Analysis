@@ -17,7 +17,7 @@ from xbrl_method import (
 )
 
 
-def collect_quarterly_candidates(ticker, cik_int, quarter_ends=None, statements=None):
+def collect_quarterly_candidates(ticker, cik_int, quarter_ends=None, statements=None, raise_on_error=False):
     """Returns one row per 10-Q filing: {ticker, period_end,
     income_statement, balance_sheet, cash_flow}. quarter_ends and
     statements are passed straight through to collect_statement_candidates,
@@ -37,5 +37,5 @@ def collect_quarterly_candidates(ticker, cik_int, quarter_ends=None, statements=
         ticker, cik_int,
         get_filings=lambda cik: get_10q_filings_with_doc(str(cik).zfill(10), min_year=min_year),
         income_period_fn=find_quarter_period, cash_flow_period_fn=find_cumulative_period,
-        period_ends=quarter_ends, statements=statements, default_limit=3,
+        period_ends=quarter_ends, statements=statements, default_limit=3, raise_on_error=raise_on_error,
     )

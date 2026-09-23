@@ -12,6 +12,8 @@ fetch/parse logic, they each just tell this file how to find their own
 filings and how long a period to look for, and this file does the real
 work once, in one place.
 """
+import requests
+
 from xbrl_method import (
     build_candidates,
     build_context_map,
@@ -28,7 +30,7 @@ ALL_STATEMENTS = {"income_statement", "balance_sheet", "cash_flow"}
 
 def collect_statement_candidates(
     ticker, cik_int, get_filings, income_period_fn, cash_flow_period_fn,
-    period_ends=None, statements=None, default_limit=None,
+    period_ends=None, statements=None, default_limit=None, raise_on_error=False,
 ):
     """Downloads one real filing (it holds every statement's numbers
     together, not split into separate files), then uses a separate
@@ -54,8 +56,12 @@ def collect_statement_candidates(
       find_cumulative_period, plus default_limit=3. The balance sheet
       never needs its own period function, it's always
       find_instant_period, since "as of one date" works the same
-      whether that date is a quarter-end or a fiscal year-end."""
-    
+      whether that date is a quarter-end or a fiscal year-end.
+    - raise_on_error: when True, a failed SEC download (network error)
+      is raised instead of the filing being skipped, so the caller can
+      tell "SEC didn't respond" from "this filing has no data". Any
+      other kind of error is still skipped either way."""
+
     statements = statements if statements is not None else ALL_STATEMENTS
 
     filings = get_filings(cik_int)
@@ -99,6 +105,11 @@ def collect_statement_candidates(
                     build_candidates(soup, contexts, cash_flow_period[0], cash_flow_period[1], report_concepts=cash_flow_concepts)
                     if cash_flow_period else []
                 )
+        except requests.exceptions.RequestException as exc:
+            if raise_on_error:
+                raise
+            print(f"\n  {ticker} {accession}: fetch failed: {exc}")
+            continue
         except Exception as exc:  # noqa: BLE001
             print(f"\n  {ticker} {accession}: fetch failed: {exc}")
             continue

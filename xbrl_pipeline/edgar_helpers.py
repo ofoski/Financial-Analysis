@@ -47,8 +47,15 @@ def find_statement_files(cik_int, accession):
     content to pick the right one.
     """
     url = f"{ARCHIVES_BASE}/{cik_int}/{accession}/FilingSummary.xml"
-    resp = requests.get(url, headers=HEADERS, timeout=15)
-    resp.raise_for_status()
+    for attempt in range(3):
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=15)
+            resp.raise_for_status()
+            break
+        except requests.exceptions.RequestException:
+            if attempt == 2:
+                raise
+            time.sleep(1)
     time.sleep(0.5)
 
     tree = ET.fromstring(resp.text)  # noqa: S314

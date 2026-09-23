@@ -58,11 +58,7 @@ def answer(message):
     results = pipeline.match_variables(ticker, entry["cik"], variables, str(year), quarter)
 
     lines = [f"{entry['name']} ({ticker}), {period_label}", ""]
-    for r in results:
-        if "error" in r:
-            lines.append(f"{r['variable']}: {r['error']}")
-        else:
-            lines.append(f"{r['variable']}: {format_value(r['value'], r['variable'])}")
+    lines += pipeline.result_lines(results, format_value)
 
     return "\n".join(lines)
 

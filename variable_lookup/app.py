@@ -99,6 +99,10 @@ def format_value(value, variable):
 def answer(company, year, quarter, variables):
     if not company:
         return "Pick a company."
+    if not year:
+        return "Pick a year."
+    if not quarter:
+        return "Pick a period."
     if not variables:
         return "Pick at least one variable."
 
@@ -109,11 +113,7 @@ def answer(company, year, quarter, variables):
 
     display_name = entry.get("display_name", entry["name"])
     lines = [f"{display_name} ({ticker}), {period_label}", ""]
-    for r in results:
-        if "error" in r:
-            lines.append(f"{r['variable']}: {r['error']}")
-        else:
-            lines.append(f"{r['variable']}: {format_value(r['value'], r['variable'])}")
+    lines += pipeline.result_lines(results, format_value)
     return "\n".join(lines)
 
 
@@ -161,9 +161,9 @@ with gr.Blocks(theme=gr.themes.Soft(primary_hue="indigo", neutral_hue="slate"), 
     gr.Markdown("Pick a company, period, and variable(s) directly.", elem_id="subtitle")
 
     with gr.Row():
-        company = gr.Dropdown(choices=COMPANIES, label="Company", filterable=True, scale=2)
-        year = gr.Dropdown(choices=YEARS, label="Year", value=YEARS[0], scale=1)
-        quarter = gr.Dropdown(choices=PERIODS, label="Period", value="FY", scale=1)
+        company = gr.Dropdown(choices=COMPANIES, label="Company", value=None, filterable=True, scale=2)
+        year = gr.Dropdown(choices=YEARS, label="Year", value=None, scale=1)
+        quarter = gr.Dropdown(choices=PERIODS, label="Period", value=None, scale=1)
 
     variables = gr.CheckboxGroup(choices=VARIABLES, label="Variables")
 
