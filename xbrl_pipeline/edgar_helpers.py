@@ -47,13 +47,13 @@ def find_statement_files(cik_int, accession):
     content to pick the right one.
     """
     url = f"{ARCHIVES_BASE}/{cik_int}/{accession}/FilingSummary.xml"
-    for attempt in range(3):
+    for attempt in range(2):
         try:
             resp = requests.get(url, headers=HEADERS, timeout=15)
             resp.raise_for_status()
             break
         except requests.exceptions.RequestException:
-            if attempt == 2:
+            if attempt == 1:
                 raise
             time.sleep(1)
     time.sleep(0.5)
@@ -61,9 +61,11 @@ def find_statement_files(cik_int, accession):
     tree = ET.fromstring(resp.text)  # noqa: S314
     found = {}
     is_candidates = []
+    combined_candidates = []
     seen = set()
 
     _IS_CATEGORIES = {"Statements", "Uncategorized"}
+    _INCOME_WORDS = ("income", "operations", "earnings", "loss")
     for report in tree.iter("Report"):
         html_file = report.findtext("HtmlFileName", "")
         if not html_file.endswith(".htm"):
@@ -73,11 +75,20 @@ def find_statement_files(cik_int, accession):
         name = report.findtext("ShortName", "").lower()
         if "parenthetical" in name:
             continue
-        is_income = any(w in name for w in ("income", "operations", "earnings", "loss"))
+        is_income = any(w in name for w in _INCOME_WORDS)
         is_comprehensive_only = "other comprehensive" in name
         if is_income and not is_comprehensive_only and html_file not in seen:
             is_candidates.append(html_file)
             seen.add(html_file)
+        elif is_comprehensive_only and any(w in name.split("other comprehensive")[0] for w in _INCOME_WORDS):
+            combined_candidates.append(html_file)
+
+    # A combined title like "Statements of Operations and Other
+    # Comprehensive Loss" is the real income statement. It is only used
+    # when nothing else matched, so filings that already find their
+    # income statement are unaffected.
+    if not is_candidates:
+        is_candidates = list(dict.fromkeys(combined_candidates))
 
     for categories in (("Statements",), ("Uncategorized",)):
         for report in tree.iter("Report"):

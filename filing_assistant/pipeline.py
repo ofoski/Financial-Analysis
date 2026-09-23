@@ -30,6 +30,11 @@ from prompt_format import CLEAR_LABELS, STATEMENT_BY_VARIABLE, make_json_prompt 
 MODEL_NAME = "Qwen/Qwen2.5-3B-Instruct"
 ADAPTER_PATH = REPO_ROOT / "qlora_adapter" / "adapter"
 PER_SHARE_VARS = {"EPS Diluted"}
+STATEMENT_NAMES = {
+    "income_statement": "an income statement",
+    "balance_sheet": "a balance sheet",
+    "cash_flow": "a cash flow statement",
+}
 
 _model = None
 _tokenizer = None
@@ -186,7 +191,7 @@ def match_variables(ticker, cik, variables, year, quarter):
             if not candidate_labels:
                 results.append({
                     "variable": variable, "scope": "statement", "statement": statement,
-                    "error": "No real filing data found.",
+                    "error": f"Could not find {STATEMENT_NAMES[statement]} for this period.",
                 })
                 continue
             prompt = make_json_prompt(candidate_labels, CLEAR_LABELS[variable])
@@ -201,8 +206,14 @@ def match_variables(ticker, cik, variables, year, quarter):
 
 def result_lines(results, format_value):
     """Turns match_variables' results into display lines. A problem
-    covering the whole period or a whole statement is written once, not
-    once per variable."""
+    covering the whole period is written once. A problem covering a
+    whole statement is written once too, naming the variables the user
+    picked from that statement."""
+    variables_by_problem = {}
+    for r in results:
+        if r.get("scope") == "statement":
+            variables_by_problem.setdefault((r["statement"], r["error"]), []).append(r["variable"])
+
     lines = []
     seen = set()
     for r in results:
@@ -210,8 +221,8 @@ def result_lines(results, format_value):
         if scope == "period":
             key, line = ("period", r["error"]), r["error"]
         elif scope == "statement":
-            label = r["statement"].replace("_", " ").capitalize()
-            key, line = (r["statement"], r["error"]), f"{label}: {r['error']}"
+            key = (r["statement"], r["error"])
+            line = f"{', '.join(variables_by_problem[key])}: {r['error']}"
         else:
             key, line = None, f"{r['variable']}: {format_value(r['value'], r['variable'])}"
         if key is not None:

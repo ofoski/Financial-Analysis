@@ -55,7 +55,7 @@ def fetch_xbrl_soup(cik_int, accession_nodash, main_htm_filename):
     if cache_key in _soup_cache:
         return _soup_cache[cache_key]
     url = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{accession_nodash}/{main_htm_filename}"
-    for attempt in range(3):
+    for attempt in range(2):
         try:
             resp = requests.get(url, headers=HEADERS, timeout=30)
             resp.raise_for_status()
@@ -63,7 +63,7 @@ def fetch_xbrl_soup(cik_int, accession_nodash, main_htm_filename):
             _soup_cache[cache_key] = soup
             return soup
         except requests.exceptions.RequestException:
-            if attempt == 2:
+            if attempt == 1:
                 raise
             time.sleep(1)
 
@@ -390,14 +390,14 @@ def get_report_concepts(cik_int, accession_nodash, report_htm):
     """
     url = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{accession_nodash}/{report_htm}"
     import re
-    for attempt in range(3):
+    for attempt in range(2):
         try:
-            resp = requests.get(url, headers=HEADERS, timeout=30)
+            resp = requests.get(url, headers=HEADERS, timeout=15)
             resp.raise_for_status()
             matches = re.findall(r"defref_([a-zA-Z][a-zA-Z0-9-]*)_([A-Za-z][A-Za-z0-9]*)", resp.text)
             return {f"{namespace}:{concept}" for namespace, concept in matches}
         except requests.exceptions.RequestException:
-            if attempt == 2:
+            if attempt == 1:
                 raise
             time.sleep(1)
 
@@ -418,8 +418,15 @@ def _report_has_income_statement_content(cik_int, accession_nodash, htm):
     figures, so it correctly gets rejected.
     """
     url = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{accession_nodash}/{htm}"
-    resp = requests.get(url, headers=HEADERS, timeout=30)
-    resp.raise_for_status()
+    for attempt in range(2):
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=15)
+            resp.raise_for_status()
+            break
+        except requests.exceptions.RequestException:
+            if attempt == 1:
+                raise
+            time.sleep(1)
     text = resp.text.lower()
     return "revenue" in text or "cost of" in text or "net sales" in text
 

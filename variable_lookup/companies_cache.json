@@ -24855,11 +24855,6 @@
       "name": "TV Channels Network Inc.",
       "display_name": "TV Channels Network Inc."
     },
-    "FETH": {
-      "cik": "0002000046",
-      "name": "Fidelity Ethereum Fund",
-      "display_name": "Fidelity Ethereum Fund"
-    },
     "NXNT": {
       "cik": "0001976663",
       "name": "Nexscient, Inc.",
@@ -25324,11 +25319,6 @@
       "cik": "0000787496",
       "name": "Longevity Diversified Holdings, Inc.",
       "display_name": "Longevity Diversified Holdings, Inc."
-    },
-    "ETHW": {
-      "cik": "0002013744",
-      "name": "Bitwise Ethereum ETF",
-      "display_name": "Bitwise Ethereum ETF"
     },
     "SIMAU": {
       "cik": "0002014982",
@@ -35942,6 +35932,7 @@
     "ETHB",
     "ETHE",
     "ETHV",
+    "ETHW",
     "ETJ",
     "ETO",
     "ETOR",
@@ -35998,6 +35989,7 @@
     "FENG",
     "FEOVF",
     "FER",
+    "FETH",
     "FFA",
     "FFC",
     "FFGG",
