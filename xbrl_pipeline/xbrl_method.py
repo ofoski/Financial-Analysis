@@ -389,11 +389,17 @@ def get_report_concepts(cik_int, accession_nodash, report_htm):
     namespace, not just us-gaap.
     """
     url = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{accession_nodash}/{report_htm}"
-    resp = requests.get(url, headers=HEADERS, timeout=30)
-    resp.raise_for_status()
     import re
-    matches = re.findall(r"defref_([a-zA-Z][a-zA-Z0-9-]*)_([A-Za-z][A-Za-z0-9]*)", resp.text)
-    return {f"{namespace}:{concept}" for namespace, concept in matches}
+    for attempt in range(3):
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=30)
+            resp.raise_for_status()
+            matches = re.findall(r"defref_([a-zA-Z][a-zA-Z0-9-]*)_([A-Za-z][A-Za-z0-9]*)", resp.text)
+            return {f"{namespace}:{concept}" for namespace, concept in matches}
+        except requests.exceptions.RequestException:
+            if attempt == 2:
+                raise
+            time.sleep(1)
 
 
 def _report_has_income_statement_content(cik_int, accession_nodash, htm):

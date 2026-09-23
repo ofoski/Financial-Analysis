@@ -38,14 +38,19 @@ def resolve_ticker(ticker):
     return _get_cik_map().get(ticker.strip().upper())
 
 
-def list_periods(ticker):
+def list_periods(ticker, target_year=None):
     """Real fiscal years and quarters this company has actually filed
     with the SEC, each with its own real period-end date. Returns None
-    if the ticker isn't real/known."""
+    if the ticker isn't real/known.
+
+    target_year: optional, passed straight through to
+    list_available_quarters - only opens filings near that one year
+    instead of every filing since 2020. Left as None (unchanged, full
+    history) for any caller that doesn't pass one."""
     entry = resolve_ticker(ticker)
     if not entry:
         return None
-    return list_available_quarters(entry["cik"])
+    return list_available_quarters(entry["cik"], target_year=target_year)
 
 
 def get_report(ticker, statement, annual_periods=None, quarterly_periods=None):

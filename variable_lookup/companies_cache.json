@@ -24800,80 +24800,20 @@
       "name": "Cannaisseur Group Inc.",
       "display_name": "Cannaisseur Group Inc."
     },
-    "ARKB": {
-      "cik": "0001869699",
-      "name": "Ark 21Shares Bitcoin ETF",
-      "display_name": "Ark 21Shares Bitcoin ETF"
-    },
     "SWAGW": {
       "cik": "0001872525",
       "name": "Stran & Company, Inc.",
       "display_name": "Stran & Company, Inc."
-    },
-    "BTCO": {
-      "cik": "0001855781",
-      "name": "Invesco Galaxy Bitcoin ETF",
-      "display_name": "Invesco Galaxy Bitcoin ETF"
-    },
-    "GSOL": {
-      "cik": "0001896677",
-      "name": "Grayscale Solana Staking ETF",
-      "display_name": "Grayscale Solana Staking ETF"
-    },
-    "GLNK": {
-      "cik": "0001852025",
-      "name": "Grayscale Chainlink Trust ETF",
-      "display_name": "Grayscale Chainlink Trust ETF"
-    },
-    "FGDL": {
-      "cik": "0001858258",
-      "name": "Franklin Templeton Holdings Trust",
-      "display_name": "Franklin Templeton Holdings Trust"
     },
     "GLEI": {
       "cik": "0001871890",
       "name": "Galaxy Enterprises Inc. /WY/",
       "display_name": "Galaxy Enterprises Inc. /WY/"
     },
-    "BTCW": {
-      "cik": "0001850391",
-      "name": "WisdomTree Bitcoin Fund",
-      "display_name": "WisdomTree Bitcoin Fund"
-    },
-    "ETHA": {
-      "cik": "0002000638",
-      "name": "iShares Ethereum Trust ETF",
-      "display_name": "iShares Ethereum Trust ETF"
-    },
-    "GSUI": {
-      "cik": "0002034012",
-      "name": "Grayscale Sui Staking ETF",
-      "display_name": "Grayscale Sui Staking ETF"
-    },
-    "EZET": {
-      "cik": "0002011535",
-      "name": "Franklin Ethereum Trust",
-      "display_name": "Franklin Ethereum Trust"
-    },
-    "TSOL": {
-      "cik": "0002028834",
-      "name": "21Shares Solana Staking ETF",
-      "display_name": "21Shares Solana Staking ETF"
-    },
-    "TKNZ": {
-      "cik": "0002089855",
-      "name": "T. Rowe Price Active Crypto ETF",
-      "display_name": "T. Rowe Price Active Crypto ETF"
-    },
     "CLYD": {
       "cik": "0002094256",
       "name": "BEACON TOPCO, INC.",
       "display_name": "Beacon Topco, Inc."
-    },
-    "TETH": {
-      "cik": "0001992508",
-      "name": "21Shares Ethereum Staking ETF",
-      "display_name": "21Shares Ethereum Staking ETF"
     },
     "SBMW": {
       "cik": "0002036060",
@@ -24905,16 +24845,6 @@
       "name": "Magnolia Bancorp, Inc.",
       "display_name": "Magnolia Bancorp, Inc."
     },
-    "GXRP": {
-      "cik": "0002037427",
-      "name": "Grayscale XRP Trust ETF",
-      "display_name": "Grayscale XRP Trust ETF"
-    },
-    "TOXR": {
-      "cik": "0002028835",
-      "name": "21Shares XRP ETF",
-      "display_name": "21Shares XRP ETF"
-    },
     "ALFUU": {
       "cik": "0002010930",
       "name": "Centurion Acquisition Corp.",
@@ -24925,35 +24855,15 @@
       "name": "TV Channels Network Inc.",
       "display_name": "TV Channels Network Inc."
     },
-    "IBIT": {
-      "cik": "0001980994",
-      "name": "iShares Bitcoin Trust ETF",
-      "display_name": "iShares Bitcoin Trust ETF"
-    },
     "FETH": {
       "cik": "0002000046",
       "name": "Fidelity Ethereum Fund",
       "display_name": "Fidelity Ethereum Fund"
     },
-    "VSOL": {
-      "cik": "0002028541",
-      "name": "VanEck Solana ETF",
-      "display_name": "VanEck Solana ETF"
-    },
     "NXNT": {
       "cik": "0001976663",
       "name": "Nexscient, Inc.",
       "display_name": "Nexscient, Inc."
-    },
-    "SOLC": {
-      "cik": "0002041869",
-      "name": "Canary Marinade Solana ETF",
-      "display_name": "Canary Marinade Solana ETF"
-    },
-    "BRRR": {
-      "cik": "0001841175",
-      "name": "CoinShares Bitcoin ETF",
-      "display_name": "CoinShares Bitcoin ETF"
     },
     "APGH": {
       "cik": "0001763660",
@@ -24965,65 +24875,15 @@
       "name": "HeartBeam, Inc.",
       "display_name": "HeartBeam, Inc."
     },
-    "LTCN": {
-      "cik": "0001732406",
-      "name": "Grayscale Litecoin Trust (LTC)",
-      "display_name": "Grayscale Litecoin Trust (LTC)"
-    },
-    "HZEN": {
-      "cik": "0001748945",
-      "name": "Grayscale Horizen Trust (ZEN)",
-      "display_name": "Grayscale Horizen Trust (ZEN)"
-    },
-    "FBTC": {
-      "cik": "0001852317",
-      "name": "Fidelity Wise Origin Bitcoin Fund",
-      "display_name": "Fidelity Wise Origin Bitcoin Fund"
-    },
-    "ETHV": {
-      "cik": "0001860788",
-      "name": "VanEck Ethereum ETF",
-      "display_name": "VanEck Ethereum ETF"
-    },
-    "HODL": {
-      "cik": "0001838028",
-      "name": "VanEck Bitcoin ETF",
-      "display_name": "VanEck Bitcoin ETF"
-    },
     "COOLU": {
       "cik": "0001829953",
       "name": "Corner Growth Acquisition Corp.",
       "display_name": "Corner Growth Acquisition Corp."
     },
-    "GAVA": {
-      "cik": "0002035053",
-      "name": "Grayscale Avalanche Staking ETF",
-      "display_name": "Grayscale Avalanche Staking ETF"
-    },
-    "BAVA": {
-      "cik": "0002086017",
-      "name": "Bitwise Avalanche ETF",
-      "display_name": "Bitwise Avalanche ETF"
-    },
-    "BCHG": {
-      "cik": "0001732409",
-      "name": "Grayscale Bitcoin Cash Trust (BCH)",
-      "display_name": "Grayscale Bitcoin Cash Trust (BCH)"
-    },
     "KRSA": {
       "cik": "0001755237",
       "name": "Korsana Biosciences, Inc.",
       "display_name": "Korsana Biosciences, Inc."
-    },
-    "IAUM": {
-      "cik": "0001759124",
-      "name": "iShares Gold Trust Micro",
-      "display_name": "iShares Gold Trust Micro"
-    },
-    "UVIX": {
-      "cik": "0001793497",
-      "name": "VS Trust",
-      "display_name": "VS Trust"
     },
     "AIRJW": {
       "cik": "0001855474",
@@ -25045,40 +24905,10 @@
       "name": "BiomX Inc.",
       "display_name": "BiomX Inc."
     },
-    "ETCG": {
-      "cik": "0001705181",
-      "name": "Grayscale Ethereum Classic Trust (ETC)",
-      "display_name": "Grayscale Ethereum Classic Trust (ETC)"
-    },
-    "BAR": {
-      "cik": "0001690437",
-      "name": "GraniteShares Gold Trust",
-      "display_name": "GraniteShares Gold Trust"
-    },
-    "PLTM": {
-      "cik": "0001690842",
-      "name": "GraniteShares Platinum Trust",
-      "display_name": "GraniteShares Platinum Trust"
-    },
-    "BDRY": {
-      "cik": "0001610940",
-      "name": "Amplify Commodity Trust",
-      "display_name": "Amplify Commodity Trust"
-    },
     "QSP": {
       "cik": "0001618755",
       "name": "Restaurant Brands International Limited Partnership",
       "display_name": "Restaurant Brands International Limited Partnership"
-    },
-    "ETHE": {
-      "cik": "0001725210",
-      "name": "Grayscale Ethereum Staking ETF",
-      "display_name": "Grayscale Ethereum Staking ETF"
-    },
-    "GXLM": {
-      "cik": "0001761325",
-      "name": "Grayscale Stellar Lumens Trust (XLM)",
-      "display_name": "Grayscale Stellar Lumens Trust (XLM)"
     },
     "SEQC": {
       "cik": "0001779977",
@@ -25090,26 +24920,6 @@
       "name": "InPoint Commercial Real Estate Income, Inc.",
       "display_name": "InPoint Commercial Real Estate Income, Inc."
     },
-    "AAAU": {
-      "cik": "0001708646",
-      "name": "Goldman Sachs Physical Gold ETF",
-      "display_name": "Goldman Sachs Physical Gold ETF"
-    },
-    "BITW": {
-      "cik": "0001723788",
-      "name": "Bitwise 10 Crypto Index ETF",
-      "display_name": "Bitwise 10 Crypto Index ETF"
-    },
-    "BITB": {
-      "cik": "0001763415",
-      "name": "Bitwise Bitcoin ETF",
-      "display_name": "Bitwise Bitcoin ETF"
-    },
-    "OBTC": {
-      "cik": "0001767057",
-      "name": "Osprey Bitcoin Trust",
-      "display_name": "Osprey Bitcoin Trust"
-    },
     "WDSP": {
       "cik": "0001813744",
       "name": "World Scan Project, Inc.",
@@ -25120,80 +24930,20 @@
       "name": "Innovative Eyewear Inc",
       "display_name": "Innovative Eyewear Inc"
     },
-    "EZBC": {
-      "cik": "0001992870",
-      "name": "Franklin Templeton Digital Holdings Trust",
-      "display_name": "Franklin Templeton Digital Holdings Trust"
-    },
-    "QETH": {
-      "cik": "0001995569",
-      "name": "Invesco Galaxy Ethereum ETF",
-      "display_name": "Invesco Galaxy Ethereum ETF"
-    },
-    "BTC": {
-      "cik": "0002015034",
-      "name": "Grayscale Bitcoin Mini Trust ETF",
-      "display_name": "Grayscale Bitcoin Mini Trust ETF"
-    },
     "LPAAU": {
       "cik": "0002015502",
       "name": "Launch One Acquisition Corp.",
       "display_name": "Launch One Acquisition Corp."
-    },
-    "XRP": {
-      "cik": "0002039525",
-      "name": "Bitwise XRP ETF",
-      "display_name": "Bitwise XRP ETF"
-    },
-    "GTAO": {
-      "cik": "0002029297",
-      "name": "Grayscale Bittensor Trust (TAO)",
-      "display_name": "Grayscale Bittensor Trust (TAO)"
-    },
-    "NCIQ": {
-      "cik": "0002031069",
-      "name": "Hashdex Nasdaq CME Crypto Index ETF",
-      "display_name": "Hashdex Nasdaq CME Crypto Index ETF"
-    },
-    "EZPZ": {
-      "cik": "0002033807",
-      "name": "Franklin Crypto Trust",
-      "display_name": "Franklin Crypto Trust"
     },
     "MWAI": {
       "cik": "0001520118",
       "name": "MedWellAI, Inc.",
       "display_name": "MedWellAI, Inc."
     },
-    "GDOG": {
-      "cik": "0002055510",
-      "name": "Grayscale Dogecoin Trust ETF",
-      "display_name": "Grayscale Dogecoin Trust ETF"
-    },
-    "VAVX": {
-      "cik": "0002060717",
-      "name": "VanEck Avalanche ETF",
-      "display_name": "VanEck Avalanche ETF"
-    },
-    "TSUI": {
-      "cik": "0002061626",
-      "name": "21Shares Sui Staking ETF",
-      "display_name": "21Shares Sui Staking ETF"
-    },
-    "GLDM": {
-      "cik": "0001618181",
-      "name": "World Gold Trust",
-      "display_name": "World Gold Trust"
-    },
     "BOTX": {
       "cik": "0001643721",
       "name": "DATZ WORLD HOLDINGS CORP.",
       "display_name": "Datz World Holdings Corp."
-    },
-    "GDLC": {
-      "cik": "0001729997",
-      "name": "Grayscale CoinDesk Crypto 5 ETF",
-      "display_name": "Grayscale CoinDesk Crypto 5 ETF"
     },
     "NGL": {
       "cik": "0001504461",
@@ -25205,50 +24955,15 @@
       "name": "GLADSTONE INVESTMENT CORPORATIONDE",
       "display_name": "Gladstone Investment Corporationde"
     },
-    "DBA": {
-      "cik": "0001383082",
-      "name": "INVESCO DB AGRICULTURE FUND",
-      "display_name": "Invesco Db Agriculture Fund"
-    },
-    "DBB": {
-      "cik": "0001383084",
-      "name": "INVESCO DB BASE METALS FUND",
-      "display_name": "Invesco Db Base Metals Fund"
-    },
-    "PALL": {
-      "cik": "0001459862",
-      "name": "abrdn Palladium ETF Trust",
-      "display_name": "abrdn Palladium ETF Trust"
-    },
-    "BNO": {
-      "cik": "0001472494",
-      "name": "United States Brent Oil Fund, LP",
-      "display_name": "United States Brent Oil Fund, LP"
-    },
     "VOC": {
       "cik": "0001505413",
       "name": "VOC Energy Trust",
       "display_name": "VOC Energy Trust"
     },
-    "OUNZ": {
-      "cik": "0001546652",
-      "name": "VanEck Merk Gold ETF",
-      "display_name": "VanEck Merk Gold ETF"
-    },
-    "SGOL": {
-      "cik": "0001450923",
-      "name": "abrdn Gold ETF Trust",
-      "display_name": "abrdn Gold ETF Trust"
-    },
     "GJH": {
       "cik": "0001286405",
       "name": "STRATS SM TRUST FOR U S CELL CORP SEC SERIES 2004 6",
       "display_name": "Strats Sm Trust For U S Cell Corp Sec Series 2004 6"
-    },
-    "USO": {
-      "cik": "0001327068",
-      "name": "United States Oil Fund, LP",
-      "display_name": "United States Oil Fund, LP"
     },
     "GJP": {
       "cik": "0001343491",
@@ -25260,35 +24975,15 @@
       "name": "STRATS(SM) Trust for Procter & Gamble Securities, Series 2006-1",
       "display_name": "STRATS(SM) Trust for Procter & Gamble Securities, Series 2006-1"
     },
-    "FXC": {
-      "cik": "0001353612",
-      "name": "Invesco CurrencyShares Canadian Dollar Trust",
-      "display_name": "Invesco CurrencyShares Canadian Dollar Trust"
-    },
     "GJS": {
       "cik": "0001356284",
       "name": "STRATS(SM) Trust for Goldman Sachs Group Securities, Series 2006-2",
       "display_name": "STRATS(SM) Trust for Goldman Sachs Group Securities, Series 2006-2"
     },
-    "UDN": {
-      "cik": "0001383149",
-      "name": "INVESCO DB US DOLLAR INDEX BEARISH FUND",
-      "display_name": "Invesco Db Us Dollar Index Bearish Fund"
-    },
-    "UNL": {
-      "cik": "0001405513",
-      "name": "United States 12 Month Natural Gas Fund, LP",
-      "display_name": "United States 12 Month Natural Gas Fund, LP"
-    },
     "ETI-P": {
       "cik": "0001427437",
       "name": "ENTERGY TEXAS, INC.",
       "display_name": "Entergy Texas, Inc."
-    },
-    "GLTR": {
-      "cik": "0001483386",
-      "name": "abrdn Precious Metals Basket ETF Trust",
-      "display_name": "abrdn Precious Metals Basket ETF Trust"
     },
     "PMT": {
       "cik": "0001464423",
@@ -25315,11 +25010,6 @@
       "name": "FAST CASUAL CONCEPTS, INC.",
       "display_name": "Fast Casual Concepts, Inc."
     },
-    "GLD": {
-      "cik": "0001222333",
-      "name": "SPDR GOLD TRUST",
-      "display_name": "Spdr Gold Trust"
-    },
     "ODRS": {
       "cik": "0001610718",
       "name": "Outdoor Specialty Products, Inc.",
@@ -25335,75 +25025,20 @@
       "name": "Brookfield Oaktree Holdings, LLC",
       "display_name": "Brookfield Oaktree Holdings, LLC"
     },
-    "UGA": {
-      "cik": "0001396878",
-      "name": "United States Gasoline Fund, LP",
-      "display_name": "United States Gasoline Fund, LP"
-    },
-    "DBC": {
-      "cik": "0001328237",
-      "name": "Invesco DB Commodity Index Tracking Fund",
-      "display_name": "Invesco DB Commodity Index Tracking Fund"
-    },
-    "PPLT": {
-      "cik": "0001460235",
-      "name": "abrdn Platinum ETF Trust",
-      "display_name": "abrdn Platinum ETF Trust"
-    },
     "ATLCP": {
       "cik": "0001464343",
       "name": "Atlanticus Holdings Corp",
       "display_name": "Atlanticus Holdings Corp"
-    },
-    "FXE": {
-      "cik": "0001328598",
-      "name": "Invesco CurrencyShares Euro Trust",
-      "display_name": "Invesco CurrencyShares Euro Trust"
     },
     "GJT": {
       "cik": "0001357660",
       "name": "STRATS(SM) Trust for Allstate Corp Securities, Series 2006-3",
       "display_name": "STRATS(SM) Trust for Allstate Corp Securities, Series 2006-3"
     },
-    "GSG": {
-      "cik": "0001332174",
-      "name": "iShares S&P GSCI Commodity-Indexed Trust",
-      "display_name": "iShares S&P GSCI Commodity-Indexed Trust"
-    },
-    "FXF": {
-      "cik": "0001353615",
-      "name": "Invesco CurrencyShares Swiss Franc Trust",
-      "display_name": "Invesco CurrencyShares Swiss Franc Trust"
-    },
-    "DBE": {
-      "cik": "0001383062",
-      "name": "Invesco DB Energy Fund",
-      "display_name": "Invesco DB Energy Fund"
-    },
-    "UNG": {
-      "cik": "0001376227",
-      "name": "United States Natural Gas Fund, LP",
-      "display_name": "United States Natural Gas Fund, LP"
-    },
-    "FXA": {
-      "cik": "0001353614",
-      "name": "Invesco CurrencyShares Australian Dollar Trust",
-      "display_name": "Invesco CurrencyShares Australian Dollar Trust"
-    },
     "ELC": {
       "cik": "0001348952",
       "name": "ENTERGY LOUISIANA, LLC",
       "display_name": "Entergy Louisiana, Llc"
-    },
-    "SLV": {
-      "cik": "0001330568",
-      "name": "iShares Silver Trust",
-      "display_name": "iShares Silver Trust"
-    },
-    "USCI": {
-      "cik": "0001479247",
-      "name": "United States Commodity Index Funds Trust",
-      "display_name": "United States Commodity Index Funds Trust"
     },
     "WNHK": {
       "cik": "0001503658",
@@ -25419,16 +25054,6 @@
       "cik": "0001425292",
       "name": "CVR PARTNERS, LP",
       "display_name": "Cvr Partners, Lp"
-    },
-    "DBO": {
-      "cik": "0001383058",
-      "name": "Invesco DB Oil Fund",
-      "display_name": "Invesco DB Oil Fund"
-    },
-    "UUP": {
-      "cik": "0001383151",
-      "name": "Invesco DB US Dollar Index Bullish Fund",
-      "display_name": "Invesco DB US Dollar Index Bullish Fund"
     },
     "ASTI": {
       "cik": "0001350102",
@@ -25480,11 +25105,6 @@
       "name": "Seritage Growth Properties",
       "display_name": "Seritage Growth Properties"
     },
-    "GBTC": {
-      "cik": "0001588489",
-      "name": "Grayscale Bitcoin Trust ETF",
-      "display_name": "Grayscale Bitcoin Trust ETF"
-    },
     "PZG": {
       "cik": "0001629210",
       "name": "Paramount Gold Nevada Corp.",
@@ -25515,16 +25135,6 @@
       "name": "SPACE EXPLORATION TECHNOLOGIES CORP",
       "display_name": "Space Exploration Technologies Corp"
     },
-    "SIVR": {
-      "cik": "0001450922",
-      "name": "abrdn Silver ETF Trust",
-      "display_name": "abrdn Silver ETF Trust"
-    },
-    "USL": {
-      "cik": "0001405528",
-      "name": "United States 12 Month Oil Fund, LP",
-      "display_name": "United States 12 Month Oil Fund, LP"
-    },
     "VRMK": {
       "cik": "0000931182",
       "name": "ERP OPERATING LTD PARTNERSHIP",
@@ -25535,35 +25145,10 @@
       "name": "TD SYNNEX CORP",
       "display_name": "Td Synnex Corp"
     },
-    "DBP": {
-      "cik": "0001383057",
-      "name": "Invesco DB Precious Metals Fund",
-      "display_name": "Invesco DB Precious Metals Fund"
-    },
-    "FXB": {
-      "cik": "0001353611",
-      "name": "Invesco CurrencyShares British Pound Sterling Trust",
-      "display_name": "Invesco CurrencyShares British Pound Sterling Trust"
-    },
-    "FXY": {
-      "cik": "0001353613",
-      "name": "Invesco CurrencyShares Japanese Yen Trust",
-      "display_name": "Invesco CurrencyShares Japanese Yen Trust"
-    },
     "GJO": {
       "cik": "0001340909",
       "name": "STRATS SM TRUST FOR WAL-MART STORES, INC. SECURITIES, SERIES 2005-4",
       "display_name": "Strats Sm Trust For Wal-mart Stores, Inc. Securities, Series 2005-4"
-    },
-    "IAU": {
-      "cik": "0001278680",
-      "name": "ISHARES GOLD TRUST",
-      "display_name": "Ishares Gold Trust"
-    },
-    "MADL": {
-      "cik": "0001052354",
-      "name": "MAN AHL DIVERSIFIED I LP",
-      "display_name": "Man Ahl Diversified I Lp"
     },
     "SIF": {
       "cik": "0000090168",
@@ -25750,26 +25335,6 @@
       "name": "SIM Acquisition Corp. I",
       "display_name": "SIM Acquisition Corp. I"
     },
-    "ETH": {
-      "cik": "0002020455",
-      "name": "Grayscale Ethereum Staking Mini ETF",
-      "display_name": "Grayscale Ethereum Staking Mini ETF"
-    },
-    "TDOG": {
-      "cik": "0002064314",
-      "name": "21Shares Dogecoin ETF",
-      "display_name": "21Shares Dogecoin ETF"
-    },
-    "QSOL": {
-      "cik": "0002074409",
-      "name": "Invesco Galaxy Solana ETF",
-      "display_name": "Invesco Galaxy Solana ETF"
-    },
-    "BWOW": {
-      "cik": "0002053791",
-      "name": "Bitwise Dogecoin ETF",
-      "display_name": "Bitwise Dogecoin ETF"
-    },
     "FJDI": {
       "cik": "0002094712",
       "name": "ARC Group Securities Acquisition I",
@@ -25779,11 +25344,6 @@
       "cik": "0002087419",
       "name": "PSB Financial, Inc.",
       "display_name": "PSB Financial, Inc."
-    },
-    "SOEZ": {
-      "cik": "0002057388",
-      "name": "Franklin Solana Trust",
-      "display_name": "Franklin Solana Trust"
     },
     "BMOK": {
       "cik": "0002071607",
@@ -25795,40 +25355,15 @@
       "name": "Catalyst Acquisition Corp.",
       "display_name": "Catalyst Acquisition Corp."
     },
-    "BSOL": {
-      "cik": "0002045872",
-      "name": "Bitwise Solana Staking ETF",
-      "display_name": "Bitwise Solana Staking ETF"
-    },
-    "BHYP": {
-      "cik": "0002088139",
-      "name": "Bitwise Hyperliquid ETF",
-      "display_name": "Bitwise Hyperliquid ETF"
-    },
     "ADBT": {
       "cik": "0002084227",
       "name": "Advasa Holdings, Inc.",
       "display_name": "Advasa Holdings, Inc."
     },
-    "CLNK": {
-      "cik": "0002082889",
-      "name": "Bitwise Chainlink ETF",
-      "display_name": "Bitwise Chainlink ETF"
-    },
     "FTRA": {
       "cik": "0002131853",
       "name": "FutureCorp Space Acquisition 1",
       "display_name": "FutureCorp Space Acquisition 1"
-    },
-    "SUIS": {
-      "cik": "0002060703",
-      "name": "Canary Staked SUI ETF",
-      "display_name": "Canary Staked SUI ETF"
-    },
-    "BITA": {
-      "cik": "0002089969",
-      "name": "iShares Bitcoin Premium Income ETF",
-      "display_name": "iShares Bitcoin Premium Income ETF"
     },
     "VII": {
       "cik": "0002139246",
@@ -25840,26 +25375,6 @@
       "name": "Market Technology Acquisition Corp",
       "display_name": "Market Technology Acquisition Corp"
     },
-    "HYPG": {
-      "cik": "0002107730",
-      "name": "Grayscale Hyperliquid Staking ETF",
-      "display_name": "Grayscale Hyperliquid Staking ETF"
-    },
-    "MSBT": {
-      "cik": "0002103612",
-      "name": "Morgan Stanley Bitcoin Trust",
-      "display_name": "Morgan Stanley Bitcoin Trust"
-    },
-    "THYP": {
-      "cik": "0002090011",
-      "name": "21Shares Hyperliquid Staking ETF",
-      "display_name": "21Shares Hyperliquid Staking ETF"
-    },
-    "ETHB": {
-      "cik": "0002099103",
-      "name": "iShares Staked Ethereum Trust ETF",
-      "display_name": "iShares Staked Ethereum Trust ETF"
-    },
     "KCAC-UN": {
       "cik": "0002102713",
       "name": "Kensington Capital Acquisition Corp. VI",
@@ -25870,11 +25385,6 @@
       "name": "Art Technology Acquisition Corp.",
       "display_name": "Art Technology Acquisition Corp."
     },
-    "XRPZ": {
-      "cik": "0002059438",
-      "name": "Franklin XRP Trust",
-      "display_name": "Franklin XRP Trust"
-    },
     "MLAA": {
       "cik": "0002094265",
       "name": "Mountain Lake Acquisition Corp. II",
@@ -25884,11 +25394,6 @@
       "cik": "0002094076",
       "name": "Starlink AI Acquisition Corp",
       "display_name": "Starlink AI Acquisition Corp"
-    },
-    "FSOL": {
-      "cik": "0002063380",
-      "name": "Fidelity Solana Fund",
-      "display_name": "Fidelity Solana Fund"
     },
     "GOOG": {
       "cik": "0001652044",
@@ -28265,11 +27770,6 @@
       "name": "Adaptimmune Therapeutics PLC",
       "display_name": "Adaptimmune Therapeutics PLC"
     },
-    "BWET": {
-      "cik": "0001610940",
-      "name": "Amplify Commodity Trust",
-      "display_name": "Amplify Commodity Trust"
-    },
     "BIVIW": {
       "cik": "0001580149",
       "name": "BIOVIE INC.",
@@ -28930,11 +28430,6 @@
       "name": "Shift4 Payments, Inc.",
       "display_name": "Shift4 Payments, Inc."
     },
-    "ZCSH": {
-      "cik": "0001720265",
-      "name": "Zcash ETF",
-      "display_name": "Zcash ETF"
-    },
     "LILAP": {
       "cik": "0001712184",
       "name": "Liberty Latin America Ltd.",
@@ -29504,11 +28999,6 @@
       "cik": "0001770450",
       "name": "Xerox Holdings Corp",
       "display_name": "Xerox Holdings Corp"
-    },
-    "SVIX": {
-      "cik": "0001793497",
-      "name": "VS Trust",
-      "display_name": "VS Trust"
     },
     "KITTW": {
       "cik": "0001849820",
@@ -31760,86 +31250,6 @@
       "name": "Brookfield Oaktree Holdings, LLC",
       "display_name": "Brookfield Oaktree Holdings, LLC"
     },
-    "AGQ": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "BOIL": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "EUO": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "GLL": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "YCL": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "YCS": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "ZSL": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "UGL": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "ULE": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "UVXY": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "VIXM": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "VIXY": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "SCO": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "SVXY": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "UCO": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
-    "KOLD": {
-      "cik": "0001415311",
-      "name": "ProShares Trust II",
-      "display_name": "ProShares Trust II"
-    },
     "PRHIZ": {
       "cik": "0001502292",
       "name": "Presurance Holdings, Inc.",
@@ -32035,36 +31445,6 @@
       "name": "TWO HARBORS INVESTMENT CORP.",
       "display_name": "Two Harbors Investment Corp."
     },
-    "CANE": {
-      "cik": "0001471824",
-      "name": "Teucrium Commodity Trust",
-      "display_name": "Teucrium Commodity Trust"
-    },
-    "BTCK": {
-      "cik": "0001471824",
-      "name": "Teucrium Commodity Trust",
-      "display_name": "Teucrium Commodity Trust"
-    },
-    "SOYB": {
-      "cik": "0001471824",
-      "name": "Teucrium Commodity Trust",
-      "display_name": "Teucrium Commodity Trust"
-    },
-    "TAGS": {
-      "cik": "0001471824",
-      "name": "Teucrium Commodity Trust",
-      "display_name": "Teucrium Commodity Trust"
-    },
-    "WEAT": {
-      "cik": "0001471824",
-      "name": "Teucrium Commodity Trust",
-      "display_name": "Teucrium Commodity Trust"
-    },
-    "CORN": {
-      "cik": "0001471824",
-      "name": "Teucrium Commodity Trust",
-      "display_name": "Teucrium Commodity Trust"
-    },
     "NCPLW": {
       "cik": "0001414767",
       "name": "Netcapital Inc.",
@@ -32170,11 +31550,6 @@
       "name": "DIGITAL REALTY TRUST, INC.",
       "display_name": "Digital Realty Trust, Inc."
     },
-    "ISMCF": {
-      "cik": "0001332174",
-      "name": "iShares S&P GSCI Commodity-Indexed Trust",
-      "display_name": "iShares S&P GSCI Commodity-Indexed Trust"
-    },
     "CFOR": {
       "cik": "0001293818",
       "name": "CapForce Inc.",
@@ -32214,11 +31589,6 @@
       "cik": "0001487428",
       "name": "Horizon Technology Finance Corp",
       "display_name": "Horizon Technology Finance Corp"
-    },
-    "CPER": {
-      "cik": "0001479247",
-      "name": "United States Commodity Index Funds Trust",
-      "display_name": "United States Commodity Index Funds Trust"
     },
     "PFLA": {
       "cik": "0001504619",
@@ -35577,6 +34947,7 @@
     }
   },
   "excluded": [
+    "AAAU",
     "AACG",
     "AAPG",
     "AAUAF",
@@ -35645,6 +35016,7 @@
     "AGMRF",
     "AGMWF",
     "AGNPF",
+    "AGQ",
     "AGQPF",
     "AGRO",
     "AGRZ",
@@ -35744,6 +35116,7 @@
     "ARDC",
     "ARGX",
     "ARIS",
+    "ARKB",
     "ARLSF",
     "ARM",
     "ARNNY",
@@ -35842,6 +35215,8 @@
     "BANX",
     "BAOS",
     "BAP",
+    "BAR",
+    "BAVA",
     "BAWAY",
     "BBAAY",
     "BBAR",
@@ -35863,6 +35238,7 @@
     "BCEPF",
     "BCEXF",
     "BCH",
+    "BCHG",
     "BCHMF",
     "BCHMY",
     "BCKIF",
@@ -35883,6 +35259,7 @@
     "BDMD",
     "BDMDW",
     "BDRX",
+    "BDRY",
     "BECEF",
     "BEJEF",
     "BEKE",
@@ -35919,6 +35296,7 @@
     "BHST",
     "BHTGY",
     "BHV",
+    "BHYP",
     "BIAI",
     "BIDU",
     "BILI",
@@ -35936,7 +35314,10 @@
     "BIREY",
     "BIRK",
     "BIT",
+    "BITA",
+    "BITB",
     "BITTF",
+    "BITW",
     "BIYA",
     "BJGPY",
     "BKAMF",
@@ -35986,12 +35367,14 @@
     "BNJ",
     "BNKD",
     "BNKU",
+    "BNO",
     "BNR",
     "BNS",
     "BNT",
     "BNTX",
     "BOE",
     "BOGD",
+    "BOIL",
     "BON",
     "BONXF",
     "BORAY",
@@ -36023,6 +35406,7 @@
     "BROXF",
     "BRPSF",
     "BRRK",
+    "BRRR",
     "BRSL",
     "BRSYF",
     "BRVMF",
@@ -36032,6 +35416,7 @@
     "BSAC",
     "BSBR",
     "BSL",
+    "BSOL",
     "BSP",
     "BST",
     "BSTR",
@@ -36039,6 +35424,10 @@
     "BSUDY",
     "BTA",
     "BTAFF",
+    "BTC",
+    "BTCK",
+    "BTCO",
+    "BTCW",
     "BTDPF",
     "BTDPY",
     "BTDR",
@@ -36070,9 +35459,11 @@
     "BVSFF",
     "BWAGF",
     "BWAY",
+    "BWET",
     "BWG",
     "BWLP",
     "BWMX",
+    "BWOW",
     "BWVTF",
     "BXDIF",
     "BXRLY",
@@ -36095,6 +35486,7 @@
     "CAMT",
     "CAMVF",
     "CAN",
+    "CANE",
     "CANF",
     "CANG",
     "CAPI",
@@ -36188,6 +35580,7 @@
     "CLIK",
     "CLLS",
     "CLM",
+    "CLNK",
     "CLPS",
     "CLRLY",
     "CLVLF",
@@ -36228,9 +35621,11 @@
     "COGDF",
     "CONE",
     "COPAF",
+    "CORN",
     "CPA",
     "CPAC",
     "CPCPF",
+    "CPER",
     "CPIVF",
     "CPNNF",
     "CPOP",
@@ -36308,7 +35703,13 @@
     "DAVI",
     "DAZSF",
     "DB",
+    "DBA",
+    "DBB",
+    "DBC",
+    "DBE",
     "DBL",
+    "DBO",
+    "DBP",
     "DCBO",
     "DCCPF",
     "DCCPY",
@@ -36534,7 +35935,13 @@
     "ESLT",
     "ESYJY",
     "ETB",
+    "ETCG",
     "ETG",
+    "ETH",
+    "ETHA",
+    "ETHB",
+    "ETHE",
+    "ETHV",
     "ETJ",
     "ETO",
     "ETOR",
@@ -36546,6 +35953,7 @@
     "EUEMF",
     "EULIF",
     "EULLY",
+    "EUO",
     "EURBF",
     "EVAWF",
     "EVAX",
@@ -36570,12 +35978,16 @@
     "EYGPF",
     "EYUBY",
     "EYUUF",
+    "EZBC",
+    "EZET",
     "EZGO",
+    "EZPZ",
     "FAMI",
     "FASLF",
     "FAX",
     "FBGL",
     "FBLL",
+    "FBTC",
     "FCHDF",
     "FCHL",
     "FCT",
@@ -36591,6 +36003,7 @@
     "FFGG",
     "FFMGF",
     "FFPP",
+    "FGDL",
     "FGL",
     "FGOVF",
     "FHFFY",
@@ -36655,6 +36068,7 @@
     "FSM",
     "FSNUF",
     "FSNUY",
+    "FSOL",
     "FSSL",
     "FSTWF",
     "FSV",
@@ -36675,10 +36089,16 @@
     "FUUFF",
     "FVGPY",
     "FVRR",
+    "FXA",
+    "FXB",
     "FXBY",
+    "FXC",
     "FXCNF",
     "FXCNY",
+    "FXE",
+    "FXF",
     "FXHO",
+    "FXY",
     "GAB",
     "GAB-PG",
     "GAB-PH",
@@ -36692,6 +36112,7 @@
     "GASS",
     "GAU",
     "GAUZ",
+    "GAVA",
     "GBAB",
     "GBAT",
     "GBCMF",
@@ -36699,6 +36120,7 @@
     "GBNB",
     "GBNXF",
     "GBNXY",
+    "GBTC",
     "GBUG",
     "GCDT",
     "GCL",
@@ -36711,8 +36133,10 @@
     "GDHLF",
     "GDHRY",
     "GDL",
+    "GDLC",
     "GDMT",
     "GDO",
+    "GDOG",
     "GDS",
     "GDSRF",
     "GDTC",
@@ -36780,13 +36204,17 @@
     "GLBE",
     "GLBS",
     "GLCNF",
+    "GLD",
     "GLDG",
     "GLDI",
+    "GLDM",
     "GLE",
     "GLG",
     "GLIV",
+    "GLL",
     "GLMD",
     "GLNG",
+    "GLNK",
     "GLO",
     "GLOB",
     "GLOH",
@@ -36795,6 +36223,7 @@
     "GLOP-PC",
     "GLPGF",
     "GLQ",
+    "GLTR",
     "GLU",
     "GLU-PA",
     "GLU-PB",
@@ -36856,6 +36285,7 @@
     "GRX",
     "GRXXF",
     "GSCCF",
+    "GSG",
     "GSIW",
     "GSK",
     "GSKRF",
@@ -36863,8 +36293,11 @@
     "GSL-PB",
     "GSM",
     "GSNR",
+    "GSOL",
+    "GSUI",
     "GSUN",
     "GSVRF",
+    "GTAO",
     "GTLRY",
     "GUG",
     "GUT",
@@ -36875,6 +36308,8 @@
     "GWKSY",
     "GWLIF",
     "GWLPF",
+    "GXLM",
+    "GXRP",
     "HACBF",
     "HACBY",
     "HAFN",
@@ -36937,6 +36372,7 @@
     "HNSDF",
     "HNSPF",
     "HNUC",
+    "HODL",
     "HPAI",
     "HPAIW",
     "HPF",
@@ -36988,15 +36424,20 @@
     "HYGU",
     "HYI",
     "HYNLY",
+    "HYPG",
     "HYPMY",
     "HYT",
+    "HZEN",
     "HZRBY",
     "IAALF",
     "IAE",
     "IAF",
     "IAG",
+    "IAU",
+    "IAUM",
     "IBG",
     "IBIDF",
+    "IBIT",
     "IBL",
     "IBN",
     "ICCM",
@@ -37085,6 +36526,7 @@
     "ISADY",
     "ISD",
     "ISFFF",
+    "ISMCF",
     "ISOU",
     "ISTKF",
     "ITHEY",
@@ -37196,6 +36638,7 @@
     "KOEI",
     "KOF",
     "KOGDF",
+    "KOLD",
     "KOSCF",
     "KOZAY",
     "KPL",
@@ -37300,6 +36743,7 @@
     "LTAFF",
     "LTAFX",
     "LTCFX",
+    "LTCN",
     "LTESF",
     "LTGHF",
     "LTGHY",
@@ -37321,6 +36765,7 @@
     "LZM-WT",
     "LZMH",
     "MAAS",
+    "MADL",
     "MAGH",
     "MAKO",
     "MAMK",
@@ -37465,6 +36910,7 @@
     "MRX",
     "MRZLF",
     "MSAV",
+    "MSBT",
     "MSC",
     "MSD",
     "MSGR",
@@ -37541,6 +36987,7 @@
     "NCEW",
     "NCHEF",
     "NCI",
+    "NCIQ",
     "NCLTF",
     "NCLTY",
     "NCNA",
@@ -37721,6 +37168,7 @@
     "OBNB",
     "OBNK",
     "OBOCY",
+    "OBTC",
     "OBULF",
     "OCAC",
     "OCAC-RI",
@@ -37788,6 +37236,7 @@
     "OTGLF",
     "OTGLY",
     "OTLY",
+    "OUNZ",
     "OURA",
     "OWLS",
     "OWSCX",
@@ -37809,6 +37258,7 @@
     "PAGS",
     "PAI",
     "PAIYY",
+    "PALL",
     "PAM",
     "PARXF",
     "PASW",
@@ -37899,6 +37349,7 @@
     "PLRZ",
     "PLSAY",
     "PLSM",
+    "PLTM",
     "PLTS",
     "PLTYF",
     "PLUT",
@@ -37930,6 +37381,7 @@
     "PPENF",
     "PPLAF",
     "PPLOF",
+    "PPLT",
     "PPT",
     "PPURF",
     "PRBRY",
@@ -37987,6 +37439,7 @@
     "PYAIF",
     "PYPD",
     "PYRGF",
+    "QETH",
     "QFIN",
     "QFNHF",
     "QGEN",
@@ -37994,6 +37447,7 @@
     "QNC",
     "QNTM",
     "QQQX",
+    "QSOL",
     "QTEX",
     "QZMRF",
     "RA",
@@ -38156,6 +37610,7 @@
     "SCBXY",
     "SCD",
     "SCMWY",
+    "SCO",
     "SCOP",
     "SCRNY",
     "SCTSF",
@@ -38190,6 +37645,7 @@
     "SGIPF",
     "SGLD",
     "SGML",
+    "SGOL",
     "SGPIY",
     "SGRX",
     "SHECF",
@@ -38220,6 +37676,7 @@
     "SINI",
     "SIREF",
     "SITKF",
+    "SIVR",
     "SKAI",
     "SKBBY",
     "SKE",
@@ -38243,6 +37700,7 @@
     "SLMT",
     "SLOIF",
     "SLSR",
+    "SLV",
     "SLVO",
     "SMDRF",
     "SMEGF",
@@ -38285,10 +37743,12 @@
     "SNYNF",
     "SOAGY",
     "SOBO",
+    "SOEZ",
     "SOGP",
     "SOHGF",
     "SOHGY",
     "SOHU",
+    "SOLC",
     "SONG",
     "SONY",
     "SOPH",
@@ -38296,6 +37756,7 @@
     "SORA",
     "SOS",
     "SOUD",
+    "SOYB",
     "SPAUF",
     "SPCB",
     "SPE",
@@ -38369,6 +37830,7 @@
     "SUCH",
     "SUGP",
     "SUGRF",
+    "SUIS",
     "SUNFF",
     "SUNXF",
     "SUPV",
@@ -38378,6 +37840,7 @@
     "SVA",
     "SVAUF",
     "SVICY",
+    "SVIX",
     "SVM",
     "SVNDF",
     "SVNHF",
@@ -38387,6 +37850,7 @@
     "SVRSF",
     "SVUHF",
     "SVUWF",
+    "SVXY",
     "SVYSF",
     "SWBGF",
     "SWBKY",
@@ -38410,6 +37874,7 @@
     "SYTN",
     "TAC",
     "TACPF",
+    "TAGS",
     "TAK",
     "TAKOF",
     "TAL",
@@ -38446,6 +37911,7 @@
     "TDF",
     "TDGGF",
     "TDIC",
+    "TDOG",
     "TDRRF",
     "TDTH",
     "TEAC",
@@ -38461,6 +37927,7 @@
     "TEN-PE",
     "TEN-PF",
     "TEO",
+    "TETH",
     "TETOF",
     "TFII",
     "TFPM",
@@ -38483,6 +37950,7 @@
     "THSGF",
     "THURF",
     "THW",
+    "THYP",
     "TIGCF",
     "TIGO",
     "TIGR",
@@ -38500,6 +37968,7 @@
     "TKMEF",
     "TKMSF",
     "TKMTY",
+    "TKNZ",
     "TKOMF",
     "TKOMY",
     "TKPHF",
@@ -38534,6 +38003,7 @@
     "TOPS",
     "TORO",
     "TOUR",
+    "TOXR",
     "TOYO",
     "TOYOF",
     "TOYWF",
@@ -38574,6 +38044,8 @@
     "TSLVF",
     "TSM",
     "TSMWF",
+    "TSOL",
+    "TSUI",
     "TTAM",
     "TTE",
     "TTIPF",
@@ -38602,18 +38074,25 @@
     "UCAR",
     "UCIB",
     "UCL",
+    "UCO",
+    "UDN",
     "UFG",
+    "UGA",
+    "UGL",
     "UGP",
     "UK",
     "UL",
+    "ULE",
     "ULIT",
     "UMC",
     "UMGNF",
     "UNBLF",
     "UNCJY",
+    "UNG",
     "UNID",
     "UNIU",
     "UNJCF",
+    "UNL",
     "UNLYF",
     "UNVGY",
     "UOKAF",
@@ -38623,14 +38102,20 @@
     "USA",
     "USAM",
     "USAS",
+    "USCI",
     "USEA",
     "USGDF",
+    "USL",
+    "USO",
     "USOI",
     "USPCY",
     "UTF",
     "UTG",
+    "UUP",
     "UURAF",
     "UUUFF",
+    "UVIX",
+    "UVXY",
     "UXIN",
     "UZX",
     "VALE",
@@ -38638,6 +38123,7 @@
     "VARRY",
     "VAT",
     "VAUCF",
+    "VAVX",
     "VBF",
     "VBNB",
     "VBNK",
@@ -38667,6 +38153,8 @@
     "VIST",
     "VIV",
     "VIVO",
+    "VIXM",
+    "VIXY",
     "VKI",
     "VKQ",
     "VLN",
@@ -38696,6 +38184,7 @@
     "VSGRY",
     "VSME",
     "VSOGF",
+    "VSOL",
     "VSRPF",
     "VTBAS",
     "VTEX",
@@ -38725,6 +38214,7 @@
     "WDI",
     "WDS",
     "WEA",
+    "WEAT",
     "WEBJF",
     "WEBNF",
     "WEGRY",
@@ -38798,6 +38288,8 @@
     "XP",
     "XPEV",
     "XPNGF",
+    "XRP",
+    "XRPZ",
     "XRTX",
     "XSIAX",
     "XTER",
@@ -38815,6 +38307,8 @@
     "YARIY",
     "YARRF",
     "YB",
+    "YCL",
+    "YCS",
     "YDDL",
     "YDES",
     "YDESW",
@@ -38851,6 +38345,7 @@
     "ZBAO",
     "ZCMD",
     "ZCRMF",
+    "ZCSH",
     "ZDAI",
     "ZENA",
     "ZEPP",
@@ -38878,6 +38373,7 @@
     "ZSHOF",
     "ZSICY",
     "ZSINF",
+    "ZSL",
     "ZTEKF",
     "ZTG",
     "ZTO",
