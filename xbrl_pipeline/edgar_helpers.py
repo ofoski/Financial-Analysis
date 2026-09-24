@@ -65,7 +65,7 @@ def find_statement_files(cik_int, accession):
     seen = set()
 
     _IS_CATEGORIES = {"Statements", "Uncategorized"}
-    _INCOME_WORDS = ("income", "operations", "earnings", "loss")
+    _INCOME_WORDS = ("income", "operation", "earnings", "loss")
     for report in tree.iter("Report"):
         html_file = report.findtext("HtmlFileName", "")
         if not html_file.endswith(".htm"):
