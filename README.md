@@ -8,40 +8,138 @@
 ![CI: lint](https://img.shields.io/github/actions/workflow/status/ofoski/Financial-Analysis/lint.yml?label=CI%3A%20lint)
 ![CI: test](https://img.shields.io/github/actions/workflow/status/ofoski/Financial-Analysis/test.yml?label=CI%3A%20test)
 
-Real financial data collected from real SEC EDGAR filings. Three separate, independently runnable pieces, sharing one fetch/parse pipeline and one fine-tuned model:
-
-- **`variable_lookup/`**: pick a company, period, and variable(s) directly from dropdowns, and a fine-tuned Qwen2.5-3B model matches the real XBRL line items from that live SEC filing.
-- **`filing_assistant/`**: the same real matching, as a free-text chat app. Ask a normal question ("What was Apple's revenue in Q1 2025?"), and a general-purpose model reads it first.
-- **`services/mcp_server/`**: an MCP server that lets an AI assistant fetch the same kind of real data itself, real filing periods, real statement line items, and real (split-adjusted) stock prices, and reason over it directly, no separately hosted model involved.
+Extracts financial variables (revenue, net income, total assets and 12 more) from real SEC 10-K and 10-Q filings, using a fine-tuned Qwen2.5-3B model. Companies that file Form 20-F/6-K instead, mostly foreign private issuers, are excluded, since this pipeline only reads 10-K/10-Q filings.
 
 ## 🌐 Live demo
 
 Try `variable_lookup/` online: [huggingface.co/spaces/Ofoski/filing-variable-lookup](https://huggingface.co/spaces/Ofoski/filing-variable-lookup). It runs on a shared GPU with a small daily limit per visitor, and may be taken offline at any time.
 
+![Filing Variable Lookup](docs/variable_lookup.png)
+
 ## ⚙️ How it works
+
+```mermaid
+flowchart TD
+    A["variable_lookup<br/>pick company, period, variables"] --> D
+    B["filing_assistant<br/>free-text question"] --> C["Extraction model<br/>Qwen2.5-7B"]
+    C --> D
+    D["Find the real filing on SEC EDGAR<br/>and its statement pages"] --> E["Candidate line items<br/>from the filing"]
+    E --> F["Fine-tuned Qwen2.5-3B<br/>picks the matching line items"]
+    F --> G["Value for each variable"]
+```
 
 ### `variable_lookup/`
 
-The company, period, and variable(s) are picked directly, so only one model is needed. **Matching** (Qwen2.5-3B fine-tuned via QLoRA, `qlora_adapter/`) is shown the real candidate line items from that company's actual filing, and picks which one (or combination, if a value has to be derived from multiple lines) represents each variable.
+You pick a company, period, and variable(s) from dropdowns. The app looks up a real filing period from that company's own filing history, pulls the line items from the right statement of that filing, and a fine-tuned Qwen2.5-3B model (QLoRA, `qlora_adapter/`) picks which one (or combination, if a value has to be derived from multiple lines) represents each variable.
 
-The company dropdown is a filtered, cached list of real domestic 10-K/10-Q filers (companies that file Form 20-F/6-K instead, mostly foreign private issuers, are excluded, since this pipeline only reads 10-K/10-Q filings). A real filing period is looked up from that company's own actual filing history before anything is matched.
+The company dropdown is a filtered, cached list of real domestic 10-K/10-Q filers.
 
 ### `filing_assistant/`
 
-The same matching step, with a second model in front of it:
+The same matching, driven by a free-text question like "What was Apple's revenue in Q1 2025?". A general-purpose model (Qwen2.5-7B-Instruct, no fine-tuning) first reads the question and pulls out the company name, period, and which of the 15 tracked variables you're asking about. The company name is resolved against SEC's real, full company list, then the matching step is the same as in `variable_lookup/`.
 
-1. **Extraction** (Qwen2.5-7B-Instruct, general-purpose, no fine-tuning) reads your free-text question and pulls out the company name, period, and which of the 15 tracked variables you're asking about.
-2. **Matching** is the same fine-tuned model as in `variable_lookup/`.
+Example:
+```
+What was Amazon's revenue and net income in Q1 2026?
 
-The company name is resolved against SEC's real, full company list (not a fixed list) before anything is matched.
+AMAZON COM INC (AMZN), Q1 2026
+
+Revenue: $181,519,000,000
+Net Income: $30,255,000,000
+```
 
 ### `services/mcp_server/`
 
-The reasoning here is done by whatever MCP-connected AI agent (like Claude) is calling these tools. It already brings its own financial knowledge, gross margin, comparisons, trends, whatever the question needs, so these 3 tools only need to hand it real numbers, "what was Apple's revenue last quarter?", "compare Microsoft's and Google's cash flow", "what's Tesla's gross margin?" all work this way.
+An MCP server that gives an AI agent such as Claude three tools for real SEC and market data. The tools return raw numbers, and the agent does the reasoning and any calculation itself, so no separately hosted model is involved.
 
-1. **Find the real period.** Fiscal quarters don't line up with calendar ones, so the agent first looks up which years and quarters a company has actually filed with the SEC, each with its own real period-end date.
-2. **Fetch the real numbers.** Using that real date, it pulls the real line items from the company's income statement, balance sheet, or cash flow filing for that period.
-3. **Get a real stock price, if needed.** Live, or on a specific date, split/dividend-adjusted so a real stock split never looks like the price crashed overnight.
+| Tool | What it returns |
+|---|---|
+| `list_periods` | The fiscal years and quarters a company has actually filed with the SEC, each with its real period-end date. Fiscal quarters don't line up with calendar ones, so this comes first. |
+| `get_report` | The real line items of an income statement, balance sheet, or cash flow statement, for one or more of those periods. |
+| `get_stock_price` | The live price, or the closing price on a given date, adjusted for splits and dividends, for any listed ticker. |
+
+The agent chains the tools to answer a question, for example:
+- "What was Apple's revenue last quarter?" finds the latest period, then reads the income statement.
+- "Compare Microsoft's and Google's operating cash flow" reads both cash flow statements and compares them.
+- "What was Tesla's gross margin?" reads revenue and cost of revenue, then calculates the margin.
+- "Compare the market cap of Apple and Amazon" combines each stock price with figures from the filings.
+
+## 💻 Running locally
+
+**What you need:** Python 3.10 or newer, and an NVIDIA GPU with CUDA for the two apps. Their models load with 4-bit quantization, which needs CUDA to run at a reasonable speed.
+
+1. Clone the whole repo.
+2. Open `xbrl_pipeline/edgar_helpers.py` and replace the placeholder `HEADERS` User-Agent with your own name and email. SEC asks every program that downloads from EDGAR to identify itself this way.
+3. Install the requirements for the two apps once, from the repo root:
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate      # on Windows; source venv/bin/activate on macOS/Linux
+   pip install -r requirements.txt
+   ```
+4. Run an app.
+
+**Variable lookup (direct selection)**:
+```bash
+cd variable_lookup
+python app.py
+```
+Runs on port 7863. `build_company_list.py` can be rerun to refresh the cached, filtered `companies_cache.json`.
+
+**Filing assistant (chat)**:
+```bash
+cd filing_assistant
+python app.py
+```
+Runs on port 7860.
+
+**MCP server** (separate from the two apps, it has its own requirements):
+```bash
+# with Python
+cd services/mcp_server
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python server.py
+
+# with Docker (run from the repo root)
+docker build -f services/mcp_server/Dockerfile -t mcp-server .
+docker run -p 8000:8000 mcp-server
+```
+Runs on port 8000. With the server running, open a Claude Code session in this folder (`.mcp.json` already points to it) and run `/mcp` to check it's connected. The server window shows `200 OK` when Claude connects. Then ask a question like "what was AAPL's revenue last quarter?"
+
+Claude decides on its own when to call the server, based on what you ask it. You never call it directly yourself.
+
+## 📊 The 15 tracked variables
+
+Collected from real 10-K (annual) and 10-Q (quarterly, Q1, Q2, Q3) SEC filings. The fine-tuned adapter was trained on 6,915 real, analyst-verified examples, validated during training on a further 759, and scores **92.4% exact-match accuracy** overall on a fully held-out test set of 1,440 examples across 48 companies (2 per sector, 24 sectors) never seen during training or validation:
+
+| Variable | Accuracy |
+|---|---|
+| Total Current Assets | 100.0% |
+| Total Current Liabilities | 100.0% |
+| Cash and Cash Equivalents | 99.0% |
+| Operating Cash Flow | 99.0% |
+| Total Assets | 99.0% |
+| Total Stockholders Equity | 99.0% |
+| EPS Diluted | 94.8% |
+| Revenue | 94.8% |
+| Net Income | 92.7% |
+| Cost of Revenue | 90.6% |
+| Operating Income | 89.6% |
+| Capital Expenditures | 87.5% |
+| Gross Profit | 87.5% |
+| Total Debt | 82.3% |
+| Total Liabilities | 70.8% |
+
+## ⚠️ Limitations
+
+- Total Liabilities (70.8%) and Total Debt (82.3%) are the weakest variables. A wrong match looks the same as a right one, and a variable shows N/A when the model finds no matching line in the filing.
+- Only 10-K and 10-Q filings from 2020 onward are supported. SEC has no standalone Q4 filing, since the 10-K covers that period.
+- For Q2 and Q3, Operating Cash Flow and Capital Expenditures are cumulative (6 or 9 months), not just the quarter.
+- Statement pages are found by keywords in their titles, so a filing with an unusual title may not be found.
+- The live demo gives each visitor a small daily GPU allowance.
+
+Improving these is the next step.
 
 ## 📁 Project structure
 
@@ -83,69 +181,3 @@ Financial-Analysis/
 ├── requirements.txt                 # Requirements for variable_lookup and filing_assistant
 └── README.md
 ```
-
-## 💻 Running locally
-
-Clone the whole repo.
-
-Before running anything, open `xbrl_pipeline/edgar_helpers.py` and replace the placeholder `HEADERS` User-Agent with your own name and email. SEC asks every program that downloads from EDGAR to identify itself this way.
-
-Install the requirements for the first two apps once, from the repo root:
-```bash
-python -m venv venv
-venv\Scripts\activate      # on Windows; source venv/bin/activate on macOS/Linux
-pip install -r requirements.txt
-```
-
-**1. Variable lookup (direct selection)**:
-```bash
-cd variable_lookup
-python app.py
-```
-Runs on port 7863. Benefits from a GPU: the model loads with 4-bit quantization, which needs CUDA to run at a reasonable speed. `build_company_list.py` can be rerun to refresh the cached, filtered `companies_cache.json`.
-
-**2. Filing assistant (chat)**:
-```bash
-cd filing_assistant
-python app.py
-```
-Runs on port 7860. Both of its models load with 4-bit quantization.
-
-**3. MCP server**:
-```bash
-# with Python
-cd services/mcp_server
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-python server.py
-
-# with Docker (run from the repo root)
-docker build -f services/mcp_server/Dockerfile -t mcp-server .
-docker run -p 8000:8000 mcp-server
-```
-Runs on port 8000. With the server running, open a Claude Code session in this folder (`.mcp.json` already points to it) and run `/mcp` to check it's connected. The server window shows `200 OK` when Claude connects. Then ask a question like "what was AAPL's revenue last quarter?"
-
-Claude decides on its own when to call the server, based on what you ask it. You never call it directly yourself.
-
-## 📊 The 15 tracked variables
-
-Collected from real 10-K (annual) and 10-Q (quarterly, Q1, Q2, Q3) SEC filings. The fine-tuned adapter was trained on 6,915 real, analyst-verified examples, validated during training on a further 759, and scores **92.4% exact-match accuracy** overall on a fully held-out test set of 1,440 examples across 48 companies (2 per sector, 24 sectors) never seen during training or validation:
-
-| Variable | Accuracy |
-|---|---|
-| Total Current Assets | 100.0% |
-| Total Current Liabilities | 100.0% |
-| Cash and Cash Equivalents | 99.0% |
-| Operating Cash Flow | 99.0% |
-| Total Assets | 99.0% |
-| Total Stockholders Equity | 99.0% |
-| EPS Diluted | 94.8% |
-| Revenue | 94.8% |
-| Net Income | 92.7% |
-| Cost of Revenue | 90.6% |
-| Operating Income | 89.6% |
-| Capital Expenditures | 87.5% |
-| Gross Profit | 87.5% |
-| Total Debt | 82.3% |
-| Total Liabilities | 70.8% |
