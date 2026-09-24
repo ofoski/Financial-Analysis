@@ -174,4 +174,4 @@ with gr.Blocks(theme=gr.themes.Soft(primary_hue="indigo", neutral_hue="slate"), 
     submit.click(run, [company, year, quarter, variables], [result, submit])
 
 if __name__ == "__main__":
-    demo.queue().launch(server_port=7863, footer_links=["settings"])
+    demo.queue().launch(server_port=7863, footer_links=["settings"], inbrowser=True)

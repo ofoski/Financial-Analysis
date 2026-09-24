@@ -14,6 +14,10 @@ Real financial data collected from real SEC EDGAR filings. Three separate, indep
 - **`variable_lookup/`**: the same real matching, without the chat. Pick a company, period, and variable(s) directly from dropdowns.
 - **`services/mcp_server/`**: an MCP server that lets an AI assistant fetch the same kind of real data itself, real filing periods, real statement line items, and real (split-adjusted) stock prices, and reason over it directly, no separately hosted model involved.
 
+## 🌐 Live demo
+
+Try `variable_lookup/` online: [huggingface.co/spaces/Ofoski/filing-variable-lookup](https://huggingface.co/spaces/Ofoski/filing-variable-lookup). It runs on a shared GPU with a small daily limit per visitor, and may be taken offline at any time.
+
 ## ⚙️ How it works
 
 ### `filing_assistant/`
