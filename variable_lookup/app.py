@@ -1,9 +1,8 @@
-"""Selection-based alternative to filing_assistant's chat interface: the
-company, year, quarter, and variable(s) are all picked directly from
-dropdowns/checkboxes instead of parsed from a free-text question, so
-this mode needs no extraction model at all - only pipeline.py (real
-filing data + the fine-tuned adapter), reused directly from
-filing_assistant rather than duplicated here.
+"""Version 1 of the project: the company, year, quarter, and variable(s)
+are all picked directly from dropdowns/checkboxes instead of parsed from
+a free-text question, so this mode needs no extraction model at all -
+only pipeline.py next to this file (real filing data + the fine-tuned
+adapter).
 
 The company dropdown is the full real SEC company list (~10,000
 companies, the same source resolver.py's resolve_company() uses via
@@ -12,9 +11,6 @@ file. Since the dropdown forces an exact, unambiguous real company
 name, there's no name-matching ambiguity to resolve here the way
 resolve_company() has to handle for free-text questions - the
 ticker/CIK is looked up directly from the same map.
-
-A separate app/folder from filing_assistant on purpose, so the finished
-chat interface there stays untouched.
 """
 import json
 import sys
@@ -33,7 +29,7 @@ import gradio as gr
 sys.setswitchinterval(0.001)
 
 REPO_ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(REPO_ROOT / "filing_assistant"))
+sys.path.insert(0, str(Path(__file__).parent))   # its own pipeline.py, next to this file
 sys.path.insert(0, str(REPO_ROOT / "xbrl_pipeline"))
 
 import pipeline  # noqa: E402
