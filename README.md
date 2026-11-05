@@ -21,8 +21,6 @@ Try `variable_lookup/` online: [huggingface.co/spaces/Ofoski/filing-variable-loo
 ```mermaid
 flowchart TD
     A["variable_lookup<br/>pick company, period, variables"] --> D
-    B["filing_assistant<br/>free-text question"] --> C["Extraction model<br/>Qwen2.5-7B"]
-    C --> D
     D["Find the real filing on SEC EDGAR<br/>and its statement pages"] --> E["Candidate line items<br/>from the filing"]
     E --> F["Fine-tuned Qwen2.5-3B<br/>picks the matching line items"]
     F --> G["Value for each variable"]
@@ -33,20 +31,6 @@ flowchart TD
 You pick a company, period, and variable(s) from dropdowns. The app looks up a real filing period from that company's own filing history, pulls the line items from the right statement of that filing, and a fine-tuned Qwen2.5-3B model (QLoRA, `qlora_adapter/`) picks which one (or combination, if a value has to be derived from multiple lines) represents each variable.
 
 The company dropdown is a filtered, cached list of real domestic 10-K/10-Q filers.
-
-### `filing_assistant/`
-
-The same matching, driven by a free-text question like "What was Apple's revenue in Q1 2025?". A general-purpose model (Qwen2.5-7B-Instruct, no fine-tuning) first reads the question and pulls out the company name, period, and which of the 15 tracked variables you're asking about. The company name is resolved against SEC's real, full company list, then the matching step is the same as in `variable_lookup/`.
-
-Example:
-```
-What was Amazon's revenue and net income in Q1 2026?
-
-AMAZON COM INC (AMZN), Q1 2026
-
-Revenue: $181,519,000,000
-Net Income: $30,255,000,000
-```
 
 ### `services/mcp_server/`
 
@@ -66,17 +50,17 @@ The agent chains the tools to answer a question, for example:
 
 ## 💻 Running locally
 
-**What you need:** Python 3.10 or newer, and an NVIDIA GPU with CUDA for the two apps. Their models load with 4-bit quantization, which needs CUDA to run at a reasonable speed.
+**What you need:** Python 3.10 or newer, and an NVIDIA GPU with CUDA for the variable lookup app. Its model loads with 4-bit quantization, which needs CUDA to run at a reasonable speed.
 
 1. Clone the whole repo.
 2. Open `xbrl_pipeline/edgar_helpers.py` and replace the placeholder `HEADERS` User-Agent with your own name and email. SEC asks every program that downloads from EDGAR to identify itself this way.
-3. Install the requirements for the two apps once, from the repo root:
+3. Install the requirements for the app once, from the repo root:
    ```bash
    python -m venv venv
    venv\Scripts\activate      # on Windows; source venv/bin/activate on macOS/Linux
    pip install -r requirements.txt
    ```
-4. Run an app.
+4. Run the app.
 
 **Variable lookup (direct selection)**:
 ```bash
@@ -85,14 +69,7 @@ python app.py
 ```
 Runs on port 7863. `build_company_list.py` can be rerun to refresh the cached, filtered `companies_cache.json`.
 
-**Filing assistant (chat)**:
-```bash
-cd filing_assistant
-python app.py
-```
-Runs on port 7860.
-
-**MCP server** (separate from the two apps, it has its own requirements):
+**MCP server** (separate from the app, it has its own requirements):
 ```bash
 # with Python
 cd services/mcp_server
@@ -147,17 +124,11 @@ Improving these is the next step.
 Financial-Analysis/
 ├── variable_lookup/                 # Direct-selection app (dropdowns)
 │   ├── app.py                       # Gradio UI (company/period/variable dropdowns)
+│   ├── pipeline.py                  # Fetches real filing data, runs the fine-tuned adapter, resolves the real value
 │   ├── build_company_list.py        # One-time build: filters SEC's full company list to real 10-K/10-Q filers
 │   └── companies_cache.json         # That build script's cached output
 │
-├── filing_assistant/                # Free-text chat app
-│   ├── app.py                       # Gradio UI
-│   ├── extract.py                   # Reads the question, extracts company/period/variables (Qwen2.5-7B)
-│   ├── qa_backend.py                # Runs extract -> resolve -> pipeline for one question
-│   ├── resolver.py                  # Resolves a company name to a real ticker/CIK
-│   └── pipeline.py                  # Fetches real filing data, runs the fine-tuned adapter, resolves the real value (also used by variable_lookup)
-│
-├── qlora_adapter/                   # The fine-tuned model filing_assistant/variable_lookup both use
+├── qlora_adapter/                   # The fine-tuned model variable_lookup uses
 │   ├── adapter/                     # The trained LoRA adapter weights (Qwen2.5-3B base)
 │   └── prompt_format.py             # The exact prompt format the adapter was trained on
 │
@@ -178,6 +149,6 @@ Financial-Analysis/
 │
 ├── .dockerignore                    # services/mcp_server/Dockerfile builds from the repo root, this keeps that build small
 ├── .mcp.json                        # Connects Claude Code to the MCP server locally
-├── requirements.txt                 # Requirements for variable_lookup and filing_assistant
+├── requirements.txt                 # Requirements for variable_lookup
 └── README.md
 ```
